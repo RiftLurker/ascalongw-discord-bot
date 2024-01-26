@@ -6,10 +6,6 @@ export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) 
     return skillData.e ? `Elite ${getTypeName()}` : getTypeName();
 
     function getTypeName() {
-        if (skillData.z?.sp && skillData.z.sp & 0x2) {
-            return 'Touch Skill';
-        }
-
         switch (skillData.t) {
         case 3:
             return 'Stance';
@@ -27,7 +23,9 @@ export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) 
         case 9:
             return 'Well Spell';
         case 10:
-            // Touch skills are 10 as well but they're properly handled above
+            if (skillData.z?.sp && skillData.z.sp & 0x2) {
+                return 'Touch Skill';
+            }
             return 'Skill';
         case 11:
             return 'Ward Spell';
