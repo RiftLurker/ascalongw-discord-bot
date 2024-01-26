@@ -6,6 +6,7 @@ import {
     Attribute,
     Skillbar,
     decodeTemplate,
+    formatDescription,
     getAttributeName,
     getProfessionAbbreviation,
     getProfessionName, getSkill,
@@ -141,7 +142,7 @@ function buildMessage(skillbar: Skillbar, skillIndex: number) {
         ...(skillData
             ? [
                 `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>)`,
-                `${getSkillTypeName(skillData)}. ${skillData.d}`
+                `${getSkillTypeName(skillData)}. ${formatDescription(skillData, skillbar)}`
             ]
             : [
                 `Skill ${skillIndex + 1}: _empty_`

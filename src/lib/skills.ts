@@ -1,7 +1,10 @@
+import roundHalfEven from 'round-half-even';
 import skills from '../../assets/skills.json';
-export function getSkill(skillId : number) : any {
+
+export function getSkill(skillId : number) : typeof skills[number] {
     return skills[skillId] ?? null;
 }
+
 export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) {
     return skillData.e ? `Elite ${getTypeName()}` : getTypeName();
 
@@ -93,6 +96,21 @@ export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) 
     }
 }
 
+export function formatDescription(skillData: NonNullable<typeof skills[number]>, skillbar: Skillbar, concise = false) {
+    const description = concise ? skillData.cd : skillData.d;
+
+    if (skillData.a >= Attribute.None || !skillData.v) {
+        return description;
+    }
+
+    const rank = skillbar.attributes[skillData.a] ?? 0;
+
+    return Object.entries(skillData.v).reduce((desc, [type, [at0, at15]]) => desc.replace(
+        `%${type}0..%${type}15`,
+        `__**${roundHalfEven(((at15 - at0) / 15) * rank + at0, 0)}**__`,
+    ), description);
+}
+
 export enum Profession {
     None,
     Warrior,
@@ -155,6 +173,7 @@ export enum Attribute {
     CriticalStrikes, SpawningPower,
     SpearMastery, Command, Motivation, Leadership,
     ScytheMastery, WindPrayers, EarthPrayers, Mysticism,
+    None = 51,
     NornRank = 214, EbonVanguardRank, DeldrimorRank, AsuraRank,
     LightbringerRank = 235, SunspearRank = 238,
     LuxonRank = 249, KurzickRank,
@@ -203,6 +222,7 @@ const ATTRIBUTE_NAMES: Record<Attribute, string> = {
     [Attribute.WindPrayers]: 'Wind Prayers',
     [Attribute.EarthPrayers]: 'Earth Prayers',
     [Attribute.Mysticism]: 'Mysticism',
+    [Attribute.None]: 'None',
     [Attribute.NornRank]: 'Norn Rank',
     [Attribute.EbonVanguardRank]: 'Ebon Vanguard Rank',
     [Attribute.DeldrimorRank]: 'Deldrimor Rank',
@@ -258,10 +278,10 @@ export function decodeTemplate(template: string): Skillbar | null {
 
     const skillBitLength = read(4) + 8;
 
-    const skills = new Array(8);
+    const skillbarSkills = new Array(8);
     for (let i = 0; i < 8; i++) {
-        skills[i] = read(skillBitLength);
-        if(!skills[0] && !getSkill(skills[i])) {
+        skillbarSkills[i] = read(skillBitLength);
+        if(!skillbarSkills[0] && !getSkill(skillbarSkills[i])) {
             return null;
         }
     }
@@ -272,7 +292,7 @@ export function decodeTemplate(template: string): Skillbar | null {
         primary,
         secondary,
         attributes,
-        skills,
+        skills: skillbarSkills,
         template,
     };
 }
@@ -296,7 +316,7 @@ export function encodeSkillbar(skillbar: Exclude<Skillbar, 'template'>): string 
     }, [] as string[]);
 
     const skillBitLength = Math.max(8, ...skillbar.skills.map(skillId => valbin(skillId, 0).length));
-    const skills = skillbar.skills.map(skillId => valbin(skillId, skillBitLength));
+    const skillbarSkills = skillbar.skills.map(skillId => valbin(skillId, skillBitLength));
 
     const template = [
         type,
@@ -308,7 +328,7 @@ export function encodeSkillbar(skillbar: Exclude<Skillbar, 'template'>): string 
         valbin(Math.max(attributeBitLength - 4, 0), 4),
         ...attributes,
         valbin(Math.max(skillBitLength - 8, 0), 4),
-        ...skills,
+        ...skillbarSkills,
     ];
     return bintocode(template.join(''));
 }
