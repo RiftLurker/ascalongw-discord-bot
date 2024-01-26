@@ -23,7 +23,10 @@ export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) 
         case 9:
             return 'Well Spell';
         case 10:
-            return 'Touch Skill';
+            if (skillData.z?.sp && skillData.z.sp & 0x2) {
+                return 'Touch Skill';
+            }
+            return 'Skill';
         case 11:
             return 'Ward Spell';
         case 12:
@@ -258,7 +261,7 @@ export function decodeTemplate(template: string): Skillbar | null {
     const skills = new Array(8);
     for (let i = 0; i < 8; i++) {
         skills[i] = read(skillBitLength);
-        if(!getSkill(skills[i])) {
+        if(!skills[0] && !getSkill(skills[i])) {
             return null;
         }
     }
