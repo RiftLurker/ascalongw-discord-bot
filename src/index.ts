@@ -1,9 +1,9 @@
 import { CommandoClient } from 'discord.js-commando';
-import path from 'path';
 import fs from 'fs';
-const config = JSON.parse(fs.readFileSync(__dirname+'/../config.json')+'');
-import { addUncachedMessageReactionHandler } from './helper/reaction';
+import path from 'path';
 import permissions from './helper/permissions';
+import { addUncachedMessageReactionHandler } from './helper/reaction';
+const config = JSON.parse(fs.readFileSync(__dirname+'/../config.json')+'');
 
 function startClient(token: string) {
   token = token.trim();

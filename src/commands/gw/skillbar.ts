@@ -1,17 +1,16 @@
-import { createCanvas, loadImage, canvasToBuffer } from '../utility/canvas';
+import { canvasToBuffer, createCanvas, loadImage } from '../utility/canvas';
 
+import { MessageAttachment } from 'discord.js';
 import { Command, CommandoClient, CommandoMessage } from 'discord.js-commando';
 import {
     Attribute,
+    Skillbar,
     decodeTemplate,
     getAttributeName,
     getProfessionAbbreviation,
     getProfessionName, getSkill,
-    getSkillTypeName,
-    Profession,
-    Skillbar,
+    getSkillTypeName
 } from '../../lib/skills';
-import { MessageAttachment } from 'discord.js';
 
 import {
     ACTIVATION,
@@ -73,6 +72,7 @@ export default class SkillbarCommand extends Command {
             const to_edit = buildMessage(skillbar, index - 1);
             if (to_edit) {
                 await message.edit(to_edit);
+                await reaction.users.remove(user.id);
             }
         });
     }
@@ -140,8 +140,8 @@ function buildMessage(skillbar: Skillbar, skillIndex: number) {
         '',
         ...(skillData
             ? [
-                `Skill ${skillIndex + 1}: **${skillData.n}** -- <https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>`,
-                `${skillData.d}`
+                `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>)`,
+                `${getSkillTypeName(skillData)}. ${skillData.d}`
             ]
             : [
                 `Skill ${skillIndex + 1}: _empty_`
