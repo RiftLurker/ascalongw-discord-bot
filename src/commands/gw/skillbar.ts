@@ -72,6 +72,7 @@ export default class SkillbarCommand extends Command {
             const to_edit = buildMessage(skillbar, index - 1);
             if (to_edit) {
                 await message.edit(to_edit);
+                await reaction.users.remove(user.id);
             }
         });
     }
