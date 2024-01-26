@@ -140,7 +140,7 @@ function buildMessage(skillbar: Skillbar, skillIndex: number) {
         '',
         ...(skillData
             ? [
-                `Skill ${skillIndex + 1}: **${skillData.n}** -- <https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>`,
+                `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>)`,
                 `${getSkillTypeName(skillData)}. ${skillData.d}`
             ]
             : [
