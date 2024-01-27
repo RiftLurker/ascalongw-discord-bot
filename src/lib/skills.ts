@@ -97,18 +97,28 @@ export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) 
 }
 
 export function formatDescription(skillData: NonNullable<typeof skills[number]>, skillbar: Skillbar, concise = false) {
-    const description = concise ? skillData.cd : skillData.d;
+    let description = concise ? skillData.cd : skillData.d;
 
-    if (skillData.a >= Attribute.None || !skillData.v) {
+    if (!skillData.v) {
         return description;
     }
 
-    const rank = skillbar.attributes[skillData.a] ?? 0;
+    const hasTitle = skillData.tt !== undefined;
 
-    return Object.entries(skillData.v).reduce((desc, [type, [at0, at15]]) => desc.replace(
-        `%${type}0..%${type}15`,
-        `__**${roundHalfEven(((at15 - at0) / 15) * rank + at0, 0)}**__`,
-    ), description);
+    for (const [type, [at0, at15]] of Object.entries(skillData.v)) {
+        const replace = hasTitle
+            ? `${at0}..${at15}`
+            : (() => {
+                const rank = (skillData.a !== undefined && skillbar.attributes[skillData.a]) || 0;
+                return `${roundHalfEven(((at15 - at0) / 15) * rank + at0, 0)}`;
+            })();
+        description = description.replace(
+            `%${type}0..%${type}15`,
+            `__**${replace}**__`,
+        );
+    }
+
+    return description;
 }
 
 export enum Profession {
@@ -161,6 +171,32 @@ export function getProfessionName<T extends keyof typeof PROFESSION_NAME>(profes
     return PROFESSION_NAME[profession];
 }
 
+export enum Title {
+    KurzickRank = 5,
+    LuxonRank,
+    SunspearRank = 17,
+    LightbringerRank = 20,
+    AsuraRank = 38,
+    DeldrimorRank,
+    EbonVanguardRank,
+    NornRank,
+}
+
+const TITLE_NAMES: Record<Title, string> = {
+    [Title.KurzickRank]: 'Kurzick Rank',
+    [Title.LuxonRank]: 'Luxon Rank',
+    [Title.SunspearRank]: 'Sunspear Rank',
+    [Title.LightbringerRank]: 'Lightbringer Rank',
+    [Title.AsuraRank]: 'Asura Rank',
+    [Title.DeldrimorRank]: 'Deldrimor Rank',
+    [Title.EbonVanguardRank]: 'Ebon Vanguard Rank',
+    [Title.NornRank]: 'Norn Rank',
+};
+
+export function getTitleName<T extends keyof typeof TITLE_NAMES>(title: T): typeof TITLE_NAMES[T] {
+    return TITLE_NAMES[title];
+}
+
 export enum Attribute {
     FastCasting, IllusionMagic, DominationMagic, InspirationMagic,
     BloodMagic, DeathMagic, SoulReaping, Curses,
@@ -174,9 +210,6 @@ export enum Attribute {
     SpearMastery, Command, Motivation, Leadership,
     ScytheMastery, WindPrayers, EarthPrayers, Mysticism,
     None = 51,
-    NornRank = 214, EbonVanguardRank, DeldrimorRank, AsuraRank,
-    LightbringerRank = 235, SunspearRank = 238,
-    LuxonRank = 249, KurzickRank,
 }
 
 const ATTRIBUTE_NAMES: Record<Attribute, string> = {
@@ -223,14 +256,6 @@ const ATTRIBUTE_NAMES: Record<Attribute, string> = {
     [Attribute.EarthPrayers]: 'Earth Prayers',
     [Attribute.Mysticism]: 'Mysticism',
     [Attribute.None]: 'None',
-    [Attribute.NornRank]: 'Norn Rank',
-    [Attribute.EbonVanguardRank]: 'Ebon Vanguard Rank',
-    [Attribute.DeldrimorRank]: 'Deldrimor Rank',
-    [Attribute.AsuraRank]: 'Asura Rank',
-    [Attribute.LightbringerRank]: 'Lightbringer Rank',
-    [Attribute.SunspearRank]: 'Sunspear Rank',
-    [Attribute.LuxonRank]: 'Luxon Rank',
-    [Attribute.KurzickRank]: 'Kurzick Rank',
 };
 
 export function getAttributeName<T extends keyof typeof ATTRIBUTE_NAMES>(attribute: T): typeof ATTRIBUTE_NAMES[T] {

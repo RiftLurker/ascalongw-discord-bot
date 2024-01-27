@@ -1,4 +1,4 @@
-import { Attribute, Profession } from '../src/lib/skills';
+import { Attribute, Profession, Title } from '../src/lib/skills';
 
 declare const data: (null | {
     n: string,
@@ -6,7 +6,8 @@ declare const data: (null | {
     cd: string;
     t: number;
     p: Profession;
-    a: Attribute;
+    a?: Attribute;
+    tt?: Title;
     e?: 1;
     c: number;
     z?: {
