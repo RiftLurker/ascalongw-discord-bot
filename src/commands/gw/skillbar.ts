@@ -1,11 +1,12 @@
-import { canvasToBuffer, createCanvas, loadImage } from '../utility/canvas';
+import { Args, Command, container } from '@sapphire/framework';
+import { ActionRowBuilder, AttachmentBuilder, Message, MessagePayloadOption, StringSelectMenuBuilder, inlineCode } from 'discord.js';
+import path from 'node:path';
+import { canvasToBuffer, createCanvas, loadImage } from '../../helper/canvas';
+import { Skillbar, decodeTemplate } from '../../lib/skills';
+const assets = path.join(__dirname, '../../../assets');
 
-import { MessageAttachment } from 'discord.js';
-import { Command, CommandoClient, CommandoMessage } from 'discord.js-commando';
 import {
     Attribute,
-    Skillbar,
-    decodeTemplate,
     formatDescription,
     getAttributeName,
     getProfessionAbbreviation,
@@ -14,6 +15,7 @@ import {
     getTitleName
 } from '../../lib/skills';
 
+import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
 import {
     ACTIVATION,
     ADRENALINE,
@@ -26,32 +28,20 @@ import {
     TEMPLATE,
     UPKEEP
 } from '../../helper/emoji';
-import path = require('path');
+import { isNonNullable } from '../../helper/types';
 
 const IMAGE_SIZE = 64;
 
-// @todo move this somewhere sensible
-const assets = path.join(__dirname, '../../../assets');
-
-export default class SkillbarCommand extends Command {
-    constructor(client: CommandoClient) {
-        super(client, {
+export class SkillbarCommand extends Command {
+    public constructor(context: Command.LoaderContext, options: Command.Options) {
+        super(context, {
+            ...options,
             name: 'skillbar',
-            aliases: ['s', 'build'],
-            group: 'gw',
-            memberName: 's',
-            description: 'Previews a skill template.',
-            details: '',
-            examples: ['s 12341234'],
-
-            args: [
-                {
-                    key: 'template',
-                    prompt: 'enter valid skill template code.',
-                    type: 'string',
-                }
-            ]
+            aliases: prefixAliases(['s', 'build']),
+            description: 'Previews a skill template.'
         });
+
+        const { client } = container;
 
         client.on('messageReactionAdd', async (reaction, user) => {
             if (reaction.partial) {
@@ -59,59 +49,143 @@ export default class SkillbarCommand extends Command {
             }
 
             const message = reaction.message;
-            if (!client.user || message.author.id !== client.user.id) return;
+            if (!client.user || message.author?.id !== client.user.id) return;
             if (user.id === client.user.id) return;
 
-            const template = message.content.match(/-- `([^`]+)` --/);
-            if (!template) return;
+            const template = message.content?.match(/-- `([^`]+)` --/);
+            if (!template) return console.log('no template found');
 
             const skillbar = decodeTemplate(template[1]);
-            if (!skillbar) return;
+            if (!skillbar) return console.log('no skillbar decoded');
 
-            const index = DIGITS.indexOf(reaction.emoji.name);
-            if (index === -1) return;
+            const index = DIGITS.indexOf(reaction.emoji.name ?? '');
+            if (index === -1) return console.log('invalid emoji');
 
-            const to_edit = buildMessage(skillbar, index - 1);
-            if (to_edit) {
-                await message.edit(to_edit);
-                await reaction.users.remove(user.id);
+            const payload = await buildPayload(skillbar, index - 1);
+            await message.edit(payload);
+            await reaction.users.remove(user.id);
+        });
+
+        client.on('interactionCreate', async (interaction) => {
+            if (!interaction.isStringSelectMenu()) {
+                return;
             }
+            const match = interaction.customId.match(/^skillbar-(.*)$/);
+            if (!match) {
+                return;
+            }
+            const template = match[1];
+            const skillIndex = +interaction.values[0];
+
+            const skillbar = decodeTemplate(template);
+            if (!skillbar) {
+                interaction.reply({
+                    content: `${inlineCode(template)} is not a valid skill template`,
+                    ephemeral: true,
+                });
+                return;
+            }
+
+            const payload = await buildPayload(skillbar, skillIndex);
+
+            await interaction.reply({
+                ...payload,
+                ephemeral: true,
+            });
         });
     }
 
-    async run(message: CommandoMessage, args: {
-        template: string,
-    }) {
-        const skillbar = decodeTemplate(args.template);
-
-        if (!skillbar) return message.say(`\`${args.template}\` is not a valid skill template.`);
-
-        const canvas = createCanvas(8 * IMAGE_SIZE, IMAGE_SIZE);
-        const ctx = canvas.getContext('2d');
-
-        const images = await Promise.all(
-            skillbar.skills.map(skillID => loadImage(path.join(assets, 'skills', `${skillID}.jpg`)))
+    public registerApplicationCommands(registry: Command.Registry) {
+        registry.registerChatInputCommand(
+            buildChatCommand(this, (builder) => (
+                builder
+                    .addStringOption((option) => (
+                        option
+                            .setName('template')
+                            .setDescription('the skillbar template to display')
+                            .setRequired(true)
+                    ))
+            ))
         );
-        images.forEach((image, index) => ctx.drawImage(image, index * IMAGE_SIZE, 0, IMAGE_SIZE, IMAGE_SIZE));
+    }
 
-        const attachment = new MessageAttachment(await canvasToBuffer(canvas), `${args.template}.png`);
-        const result = await message.say(buildMessage(skillbar, 0), attachment);
-        const lastMessage = Array.isArray(result) ? result[result.length - 1] : result;
-        for (let i = 0; i < skillbar.skills.length; i++) {
-            await lastMessage.react(DIGITS[i + 1]);
+    public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+        return this.execute(interaction, interaction.options.getString('template', true));
+
+        /* REMOVE STUFF BELOW */
+        // await attachReactions();
+    }
+
+    public async messageRun(message: Message, args: Args) {
+        return this.execute(message, await args.pick('string'));
+    }
+
+    public async execute(origin: CommandOrigin, template: string) {
+        const isEphemeral = isEphemeralCommand(origin, false);
+
+        const skillbar = decodeTemplate(template);
+        if (!skillbar) {
+            return origin.reply({
+                content: `${inlineCode(template)} is not a valid skill template`,
+                ephemeral: isEphemeral,
+            });
         }
 
-        return result;
+        const payload = await buildPayload(skillbar);
+        await origin.reply({
+            ...payload,
+            ephemeral: isEphemeral,
+        });
     }
 }
 
-function buildMessage(skillbar: Skillbar, skillIndex: number) {
-    const skillId = skillbar.skills[skillIndex];
-    const skillData = getSkill(skillId);
-    if(!skillData) {
-        return false;
-    }
+async function buildPayload(skillbar: Skillbar, skillIndex?: number) {
+    const canvas = createCanvas(8 * IMAGE_SIZE, IMAGE_SIZE);
+    const ctx = canvas.getContext('2d');
 
+    const images = await Promise.all(
+        skillbar.skills.map(skillID => loadImage(path.join(assets, 'skills', `${skillID}.jpg`)))
+    );
+    images.forEach((image, index) => ctx.drawImage(image, index * IMAGE_SIZE, 0, IMAGE_SIZE, IMAGE_SIZE));
+
+    const attachment = new AttachmentBuilder(await canvasToBuffer(canvas), {
+        name: `${skillbar.template}.png`,
+    });
+
+    const content = buildSkillbarContent(skillbar, skillIndex);
+
+    const components = [
+        new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId(`skillbar-${skillbar.template}`)
+                    .setPlaceholder('Skill Info')
+                    .addOptions(
+                        ...(skillbar.skills.map((skillId, index) => {
+                            const skill = getSkill(skillId);
+
+                            if (!skill) {
+                                return null;
+                            }
+
+                            return {
+                                label: skill?.n,
+                                value: `${index}`,
+                                emoji: DIGITS[index + 1],
+                            };
+                        }).filter(isNonNullable))
+                    )
+            )
+    ];
+
+    return {
+        content,
+        files: [attachment],
+        components,
+    } satisfies MessagePayloadOption;
+}
+
+function buildSkillbarContent(skillbar: Skillbar, skillIndex?: number) {
     const primary = `${PROFESSION.get(skillbar.primary)} ${getProfessionAbbreviation(skillbar.primary)}`;
     const secondary = `${getProfessionAbbreviation(skillbar.secondary)} ${PROFESSION.get(skillbar.secondary)}`;
 
@@ -123,6 +197,23 @@ function buildMessage(skillbar: Skillbar, skillIndex: number) {
         }
         return arr;
     };
+    return [
+        `${primary} / ${secondary} -- \`${skillbar.template}\` -- ${TEMPLATE}`,
+        listAttributes(skillbar.attributes).join(' '),
+        ' ',
+        ...(skillIndex == null
+            ? []
+            : buildSkillInfoContent(skillbar, skillIndex)
+        )
+    ].join('\n');
+}
+
+function buildSkillInfoContent(skillbar: Skillbar, skillIndex: number) {
+    const skillId = skillbar.skills[skillIndex];
+    const skillData = getSkill(skillId);
+    if(!skillData) {
+        throw new Error(`Unable to find skill data for skill **${skillId}**`);
+    }
 
     const skillInfo = [];
     if (skillData?.z?.d) skillInfo.push(`-${skillData.z.d} ${UPKEEP}`);
@@ -137,22 +228,18 @@ function buildMessage(skillbar: Skillbar, skillIndex: number) {
     if (skillData?.tt) skillInfo.push(`Title: **${getTitleName(skillData.tt)}**`);
     if (skillData?.t) skillInfo.push(`Type: **${getSkillTypeName(skillData)}**`);
 
+    const skillDescription = skillData
+        ? [
+            `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>)`,
+            `> ${getSkillTypeName(skillData)}. ${formatDescription(skillData, skillbar)}`
+        ]
+        : [
+            `Skill ${skillIndex + 1}: _empty_`
+        ];
+
     return [
-        `${primary} / ${secondary} -- \`${skillbar.template}\` -- ${TEMPLATE}`,
-        listAttributes(skillbar.attributes).join(' '),
+        ...skillDescription,
         '',
-        ...(skillData
-            ? [
-                `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>)`,
-                `${getSkillTypeName(skillData)}. ${formatDescription(skillData, skillbar)}`
-            ]
-            : [
-                `Skill ${skillIndex + 1}: _empty_`
-            ]
-        ),
-        '',
-        skillInfo.join(' '),
+        skillInfo.join(' ')
     ];
 }
-
-

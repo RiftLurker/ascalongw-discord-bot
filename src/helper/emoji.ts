@@ -1,4 +1,4 @@
-import { Profession } from '../lib/skills';
+import { Profession } from '../../src/lib/skills';
 
 export const DIGITS = [
     '\u0030\u20E3',
@@ -36,6 +36,13 @@ export const RECHARGE = '<:recharge:769885690204389407>';
 export const OVERCAST = '<:overcast:769885690221297674>';
 export const UPKEEP = '<:upkeep:769885690670350377>';
 
+export const GOLD = '<:Gold:1204443858553798697>';
+export const PLATINUM = '<:Platinum:1204443860093378630>';
+
+export const GIFT_OF_THE_HUNTSMAN = '<:Gift_of_the_Huntsman:1204509618735419474>';
+
 export const ZAISHEN_COPPER_COIN = '<:zaishen_copper_coin:796371200280100884>';
+
+export const VANGUARD_INITIATE = '<:Vanguard_Initiate:1204509620471734362>';
 
 export const EDIT = '\uD83D\uDCDD';

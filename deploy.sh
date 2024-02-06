@@ -1,7 +1,7 @@
 #!/bin/bash
 CURRENT_BASH_SCRIPT="${BASH_SOURCE[0]}"
 PROJECT_CODE_FOLDER="$( cd "$( dirname "${CURRENT_BASH_SCRIPT}" )" >/dev/null 2>&1 && pwd )"
-NODEJS_VERSION="15"
+NODEJS_VERSION="20"
 printf "${RED}*** Project code folder is ${PROJECT_CODE_FOLDER}, ${USER} ***${NC}\n";
 SERVER_TIMEZONE="UTC"
 if [ -f /sys/hypervisor/uuid ] && [ `head -c 3 /sys/hypervisor/uuid` == ec2 ]; then
@@ -51,7 +51,7 @@ npm -v | grep -q "[0-9]" || (sudo apt-get update && sudo apt install npm -y);
 # npm -v 2>/dev/null > /dev/null || (curl -L https://npmjs.org/install.sh | sudo sh);
 
 # Install nodejs
-NODEJS_VERSION="15"
+NODEJS_VERSION="20"
 node -v | grep -q "v${NODEJS_VERSION}" || (
   # sudo apt-get remove nodejs -y;
   sudo npm cache clean -f;

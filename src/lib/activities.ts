@@ -6,6 +6,7 @@
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const MILLISECONDS_PER_WEEK = MILLISECONDS_PER_DAY * 7;
 
+import { addMilliseconds, intervalToDuration } from 'date-fns';
 import nicholasSandford from '../../assets/activities/nicholas-sandford.json';
 import nicholasTheTraveler from '../../assets/activities/nicholas-the-traveler.json';
 import pveBonus from '../../assets/activities/pve-bonus.json';
@@ -16,7 +17,6 @@ import zaishenBounty from '../../assets/activities/zaishen-bounty.json';
 import zaishenCombat from '../../assets/activities/zaishen-combat.json';
 import zaishenMission from '../../assets/activities/zaishen-mission.json';
 import zaishenVanquish from '../../assets/activities/zaishen-vanquish.json';
-import { intervalToDuration } from 'date-fns';
 
 export const ACTIVITIES = {
     'nicholas-sandford': {
@@ -71,13 +71,13 @@ export const ACTIVITIES = {
     },
 };
 
-export function getActivity<T extends keyof typeof ACTIVITIES>(type: T, date: Date = new Date()): typeof ACTIVITIES[T]['data'][0] {
+export function getActivity<T extends keyof typeof ACTIVITIES>(type: T, date: Date = new Date(), activityOffset = 0): typeof ACTIVITIES[T]['data'][0] {
     const { data, startDate, period } = ACTIVITIES[type];
-    const index = getIndex(data, startDate, period, date);
+    const index = getIndex(data, startDate, period, date, activityOffset);
     return data[index];
 }
 
-export function getActivityMeta<T extends keyof typeof ACTIVITIES>(type: T, date: Date = new Date()): {
+export function getActivityMeta<T extends keyof typeof ACTIVITIES>(type: T, date: Date = new Date(), activityOffset = 0): {
     activity: typeof ACTIVITIES[T]['data'][0],
     startDate: Date,
     endDate: Date,
@@ -85,12 +85,12 @@ export function getActivityMeta<T extends keyof typeof ACTIVITIES>(type: T, date
     dailyCountdown: string,
 } {
     const { data, startDate, period } = ACTIVITIES[type];
-    const index = getIndex(data, startDate, period, date);
-    const endDate = getActivityEndDate(type, date);
+    const index = getIndex(data, startDate, period, date, activityOffset);
+    const endDate = getActivityEndDate(type, addMilliseconds(date, period * activityOffset));
     return {
         activity: data[index],
-        startDate: getActivityStartDate(type, date),
-        endDate: getActivityEndDate(type, date),
+        startDate: getActivityStartDate(type, addMilliseconds(date, period * activityOffset)),
+        endDate,
         weeklyCountdown: getWeeklyCountdown(endDate),
         dailyCountdown: getDailyCountdown(endDate),
     };
@@ -98,9 +98,9 @@ export function getActivityMeta<T extends keyof typeof ACTIVITIES>(type: T, date
 
 // @fixme using a generic type for data messes with the functions above, will have to look into this and clean up
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getIndex(data: any[], startDate: Date, period: number, date: Date) {
+function getIndex(data: any[], startDate: Date, period: number, date: Date, indexOffset = 0) {
     const elapsedTime = date.getTime() - startDate.getTime();
-    const elapsedRotations = Math.floor(elapsedTime / period);
+    const elapsedRotations = Math.floor(elapsedTime / period) + indexOffset;
     return elapsedRotations % data.length;
 }
 

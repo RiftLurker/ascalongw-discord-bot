@@ -1,69 +1,61 @@
-import { CommandoClient } from 'discord.js-commando';
-import fs from 'fs';
-import path from 'path';
-import permissions from './helper/permissions';
-import { addUncachedMessageReactionHandler } from './helper/reaction';
-const config = JSON.parse(fs.readFileSync(__dirname+'/../config.json')+'');
+import { ApplicationCommandRegistries, SapphireClient } from '@sapphire/framework';
+import { ActivityType, GatewayIntentBits, Partials } from 'discord.js';
+import express from 'express';
 
-function startClient(token: string) {
-  token = token.trim();
-  if(!token)
-    return;
-  const client = new CommandoClient({
-      commandPrefix: config.prefix,
-      owner: config.owners
-  });
+import config from '../config.json';
 
-  client.once('ready', async () => {
-      if (!client.user) return;
-      console.log(`Ready! Logged in as ${client.user.username}#${client.user.discriminator}.`);
+const client = new SapphireClient({
+    intents: [
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+    ],
+    partials: [
+        Partials.Message,
+        Partials.Channel,
+        Partials.Reaction,
+    ],
+    loadMessageCommandListeners: true,
+    loadDefaultErrorListeners: true,
+});
 
-      console.log(await client.generateInvite(permissions));
-      addUncachedMessageReactionHandler(client);
-      client.user.setPresence({ activity: { name: '-help', type:'LISTENING' }});
-  });
+const tokens = 'tokens' in config
+    ? config.tokens
+    : [config.token];
 
-  client.registry
-      .registerGroups([
-          ['gw', 'Guild Wars-related commands']
-      ])
-      .registerDefaultTypes()
-      .registerDefaultGroups()
-      .registerDefaultCommands({
-          eval: false,
-          unknownCommand: false,
-          commandState: false
-      })
-      .registerCommandsIn({
-          dirname: path.join(__dirname, 'commands'),
-          filter: /(.+)\.(js|ts)$/,
-      });
+tokens.forEach(async (token) => {
+    await client.login(token);
+    client.user?.setPresence({
+        activities: [
+            {
+                name: 'slash commands',
+                type: ActivityType.Listening,
+            },
+        ],
+    });
+});
 
-  // Bot token should always be placed in config.json and never committed to repo
-  console.log("Bot token is "+token);
-  client.login(token);
+if (config.devGuild) {
+    ApplicationCommandRegistries.setDefaultGuildIds([config.devGuild]);
 }
 
-let tokens = config.tokens || [config.token || ''];
-tokens.forEach(startClient);
-
 setInterval(function() {
-  try {
-    if (global.gc) {global.gc();}
-  } catch(e) { }
-},60000);
+    try {
+        if (global.gc) {global.gc();}
+    }
+    catch {
+        //
+    }
+}, 60000);
 
 /*
-    Ping
+ * Ping
  */
-const express = require('express')
-const app = express()
-const port = 80
+const app = express();
+app.get('/', (req, res) => {
+    res.send('ok');
+});
 
-app.get('/', (req: any, res: any) => {
-    res.send('ok')
-})
-
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+app.listen(config.port ?? 80);

@@ -1,35 +1,82 @@
-import { Command, CommandoClient, CommandoMessage } from 'discord.js-commando';
+import { Subcommand } from '@sapphire/plugin-subcommands';
+import { isFuture } from 'date-fns';
+import { Message, hideLinkEmbed } from 'discord.js';
+import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
+import { getActivity, getActivityMeta } from '../../lib/activities';
+import { wikiSearchUrl } from './wiki';
 
-import {
-    getActivity,
-    getActivityMeta,
-} from '../../lib/activities';
-
-export = class NicholasTheTravelerCommand extends Command {
-    constructor(client: CommandoClient) {
-        super(client, {
+export class ZaishenQuestCommand extends Subcommand {
+    public constructor(context: Subcommand.LoaderContext, options: Subcommand.Options) {
+        super(context, {
+            ...options,
             name: 'nicholas-the-traveler',
-            aliases: ['nick', 'n'],
-            group: 'gw',
-            memberName: 'nick',
-            description: 'Displays current Nicholas the Traveler information with a countdown.',
-            details: ''
+            aliases: prefixAliases(['nick', 'n']),
+            description: 'Displays Nicholas the Traveler information.',
+            subcommands: [
+                {
+                    name: 'current',
+                    messageRun: 'messageRunCurrent',
+                    chatInputRun: 'chatInputRunCurrent',
+                    default: true,
+                },
+                {
+                    name: 'next',
+                    messageRun: 'messageRunNext',
+                    chatInputRun: 'chatInputRunNext',
+                }
+            ]
         });
     }
 
-    async run(message: CommandoMessage) {
-        const { weeklyCountdown } = getActivityMeta('nicholas-the-traveler');
-        const now = new Date();
+    public registerApplicationCommands(registry: Subcommand.Registry) {
+        registry.registerChatInputCommand(
+            buildChatSubCommand(this, {
+                current: {
+                    description: 'Displays current Nicholas the Traveler information.',
+                },
+                next: {
+                    description: 'Displays next Nicholas the Traveler information.',
+                }
+            })
+        );
+    }
 
-        const { region, amount, item, area } = getActivity('nicholas-the-traveler', now);
+    public async chatInputRunCurrent(interaction: Subcommand.ChatInputCommandInteraction) {
+        return this.execute(interaction);
+    }
 
-        const output = [
-            '__This week:__',
-            `Nicholas the Traveler is collecting **${amount} ${item}** ` +
-            `per present at **${area}** in ${region}.`,
-            `Moving off in ${weeklyCountdown}!`,
-        ];
+    public async chatInputRunNext(interaction: Subcommand.ChatInputCommandInteraction) {
+        return this.execute(interaction, 1);
+    }
 
-        return message.say(output);
+    public async messageRunCurrent(message: Message) {
+        return this.execute(message);
+    }
+
+    public async messageRunNext(message: Message) {
+        return this.execute(message, 1);
+    }
+
+    public async execute(origin: CommandOrigin, activityOffset = 0) {
+        const isEphemeral = isEphemeralCommand(origin);
+
+        const date = new Date();
+
+        const activityMeta = getActivityMeta('nicholas-the-traveler', date, activityOffset);
+        const [verb, footer] = isFuture(activityMeta.startDate)
+            ? ['will collect', `Starting in ${activityMeta.dailyCountdown}!`]
+            : ['is collecting', `Moving away in ${activityMeta.dailyCountdown}!`];
+
+        const { region, amount, item, area } = getActivity('nicholas-the-traveler', date, activityOffset);
+
+        return origin.reply({
+            content: [
+                `[Nicholas The Traveler](${hideLinkEmbed('https://wiki.guildwars.com/wiki/Nicholas_the_Traveler')})`,
+                `${verb} **${amount} [${item}](${hideLinkEmbed(wikiSearchUrl(item))})**`,
+                `per present at **[${area}](${hideLinkEmbed(wikiSearchUrl(area))})** in ${region}.`,
+                footer,
+            ].join('\n'),
+            ephemeral: isEphemeral,
+        });
     }
 }

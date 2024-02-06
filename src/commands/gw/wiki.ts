@@ -1,51 +1,73 @@
-import { Command, CommandoClient, CommandoMessage } from 'discord.js-commando';
+import { Args, Command } from '@sapphire/framework';
 import axios from 'axios';
+import { Message } from 'discord.js';
+import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
 
-const wiki_website = 'https://wiki.guildwars.com';
+const WIKI_WEBSITE = 'https://wiki.guildwars.com';
 
-export default class WikiCommand extends Command {
-    constructor(client: CommandoClient) {
-        super(client, {
+export class WikiCommand extends Command {
+    public constructor(context: Command.LoaderContext, options: Command.Options) {
+        super(context, {
+            ...options,
             name: 'wiki',
-            group: 'gw',
-            aliases:['gww','guildwarswiki'],
-            memberName: 'wiki',
-            description: `Queries Guild Wars Wiki for a search term.`,
-            details: '',
-            examples: ['wiki Duke Barradin'],
-            args: [
-                {
-                    key: 'search',
-                    prompt: 'enter a search term.',
-                    type: 'string'
-                }
-            ]
+            aliases: prefixAliases(['gww', 'guildwarswiki']),
+            description: 'Queries Guild Wars Wiki for a search term.',
         });
     }
 
-    async run(message: CommandoMessage, args: {
-        search: string,
-    }) {
-        const sayResult = await message.say(`Searching for **${args.search}**, just a sec...`);
-        const searchMessage = Array.isArray(sayResult) ? sayResult[sayResult.length - 1] : sayResult;
+    public registerApplicationCommands(registry: Command.Registry) {
+        registry.registerChatInputCommand(
+            buildChatCommand(this, (builder) => (
+                builder
+                    .addStringOption((option) => (
+                        option
+                            .setName('search')
+                            .setDescription('enter a search term')
+                            .setRequired(true)
+                    ))
+            ))
+        );
+    }
 
-        // NB: Wiki turns spaces into underscores, but idk if thats needed here
-        const enc_search = encodeURIComponent(args.search.toLowerCase());
-        const url = `${wiki_website}/index.php?search=${enc_search}`;
+    public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+        return this.execute(interaction, interaction.options.getString('search', true));
+    }
+
+    public async messageRun(message: Message, args: Args) {
+        return this.execute(message, await args.rest('string'));
+    }
+
+    public async execute(origin: CommandOrigin, search: string) {
+        const isEphemeral = isEphemeralCommand(origin);
+
+        const message = isEphemeral
+            ? await origin.deferReply({
+                ephemeral: true,
+            })
+            : await origin.reply(`Searching for **${search}**, just a sec...`);
+
+        const url = wikiSearchUrl(search);
+
+        let responseUrl = url;
 
         try {
             const response = await axios.get(url);
-            let response_url = response.request.res.responseUrl;
+            responseUrl = response.request.res.responseUrl;
             // Find canonical link
             const canonical = /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/.exec(response.data);
             if(canonical) {
-                response_url = canonical[1];
+                responseUrl = canonical[1];
             }
-            return await searchMessage.edit(response_url);
-        } catch(error : any) {
+        }
+        catch {
             // GWW can give error 403 if it suspects that we're a bot e.g. hosted on AWS etc
             // NBD, but give the URL back to discord and it'll try to fill it out
-            return await searchMessage.edit(url);
         }
+
+        await message.edit(responseUrl);
     }
+}
+
+export function wikiSearchUrl(search: string) {
+    return `${WIKI_WEBSITE}/index.php?search=${encodeURIComponent(search.toLocaleLowerCase())}`;
 }

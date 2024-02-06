@@ -1,42 +1,52 @@
-import { createCanvas, loadImage, canvasToBuffer } from '../utility/canvas';
-import { Command, CommandoClient, CommandoMessage } from 'discord.js-commando';
-import {
-    decodeTemplate, getProfessionName, Skillbar
-} from '../../lib/skills';
-import path = require('path');
-import { MessageAttachment } from 'discord.js';
+import { Args, Command } from '@sapphire/framework';
+import { AttachmentBuilder, Message } from 'discord.js';
+import path from 'node:path';
+import { Bitmap } from 'pureimage/types/bitmap';
+import { canvasToBuffer, createCanvas, loadImage } from '../../helper/canvas';
+import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
+import { Skillbar, decodeTemplate, getProfessionName } from '../../lib/skills';
+
+const assets = path.join(__dirname, '../../../assets');
 
 const IMAGE_SIZE = 64;
 
-// @todo move this somewhere sensible
-const assets = path.join(__dirname, '../../../assets');
-
-export default class TeambuildCommand extends Command {
-    constructor(client: CommandoClient) {
-        super(client, {
+export class SkillbarCommand extends Command {
+    public constructor(context: Command.LoaderContext, options: Command.Options) {
+        super(context, {
+            ...options,
             name: 'teambuild',
-            aliases: ['tb', 't'],
-            group: 'gw',
-            memberName: 't',
-            description: 'Previews a team skill template.',
-            details: '',
-            examples: ['tb 12341234'],
-
-            args: [
-                {
-                    key: 'templates',
-                    prompt: 'enter valid skill template codes',
-                    type: 'string',
-                    infinite: true,
-                }
-            ]
+            aliases: prefixAliases(['tb', 't']),
+            description: 'Previews multiple skill templates.'
         });
     }
 
-    async run(message: CommandoMessage, args: {
-        templates: string[],
-    }) {
-        const skillbars = args.templates.map(decodeTemplate).filter((skillbar): skillbar is Skillbar => skillbar !== null);
+    public registerApplicationCommands(registry: Command.Registry) {
+        registry.registerChatInputCommand(
+            buildChatCommand(this, (builder) => (
+                builder
+                    .addStringOption((option) => (
+                        option
+                            .setName('templates')
+                            .setDescription('the skillbar templates to display, space separated')
+                            .setRequired(true)
+                    ))
+            ))
+        );
+    }
+
+    public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+        const rawTemplates = interaction.options.getString('templates', true);
+        return this.execute(interaction, rawTemplates.split(' '));
+    }
+
+    public async messageRun(message: Message, args: Args) {
+        return this.execute(message, await args.repeat('string'));
+    }
+
+    public async execute(origin: CommandOrigin, templates: string[]) {
+        const isEphemeral = isEphemeralCommand(origin, false);
+
+        const skillbars = templates.map(decodeTemplate).filter((skillbar): skillbar is Skillbar => skillbar !== null);
         const canvas = createCanvas(9 * IMAGE_SIZE, skillbars.length * IMAGE_SIZE);
         const ctx = canvas.getContext('2d');
 
@@ -46,19 +56,18 @@ export default class TeambuildCommand extends Command {
                 loadImage(path.join(assets, 'professions', `${getProfessionName(skillbar.primary)}.png`)),
                 ...skillbar.skills.map(skillID => loadImage(path.join(assets, 'skills', `${skillID}.jpg`))),
             ];
-        }, [] as Promise<any>[]));
+        }, [] as Promise<Bitmap>[]));
 
         images.forEach((image, index) => ctx.drawImage(image, (index % 9) * IMAGE_SIZE, Math.floor(index / 9) * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE));
 
-        let filename = `${args.templates.join('|')}.png`;
+        const buffer = await canvasToBuffer(canvas);
+        const attachment = new AttachmentBuilder(buffer, {
+            name: `${templates.join('|')}.png`,
+        });
 
-        let buffer = await canvasToBuffer(canvas);
-        const attachment = new MessageAttachment(buffer, filename);
-
-		let reply = await message.say('', attachment);
-
-        
-		
-        return reply;
+        return origin.reply({
+            files: [attachment],
+            ephemeral: isEphemeral,
+        });
     }
 }

@@ -1,69 +1,89 @@
-import { Command, CommandoClient, CommandoMessage } from 'discord.js-commando';
-import { getMaterial } from '../../lib/materials';
+import { Command } from '@sapphire/framework';
 import axios from 'axios';
+import { EmbedBuilder, Message, formatEmoji } from 'discord.js';
+import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
+import { emojiPrice } from '../../helper/prices';
+import { isNonNullable } from '../../helper/types';
+import { Material, getMaterials } from '../../lib/materials';
 
-const trade_website = 'https://kamadan.gwtoolbox.com';
-
-interface TraderQuotes {
-    buy: Record<string, TraderQuote>;
-}
+const TRADE_WEBSITE = 'https://kamadan.gwtoolbox.com';
 
 interface TraderQuote {
     p: number;
     t: number;
 }
 
-export default class MaterialsCommand extends Command {
-    constructor(client: CommandoClient) {
-        super(client, {
+interface TraderQuotes {
+    buy: Record<string, TraderQuote>;
+}
+
+export class MaterialsCommand extends Command {
+    public constructor(context: Command.LoaderContext, options: Command.Options) {
+        super(context, {
+            ...options,
             name: 'materials',
-            aliases: ['mats'],
-            group: 'gw',
-            memberName: 'mats',
-            description: `Queries ${trade_website} for current material trader prices.`,
-            details: '',
-            examples: ['mats']
+            aliases: prefixAliases(['mats']),
+            description: `Queries ${TRADE_WEBSITE} for current material trader prices.`,
         });
     }
 
-    async run(message: CommandoMessage) {
-        const sayResult = await message.say('Fetching current material prices, just a sec...');
-        const fetchMessage = Array.isArray(sayResult) ? sayResult[sayResult.length - 1] : sayResult;
+    public registerApplicationCommands(registry: Command.Registry) {
+        registry.registerChatInputCommand(
+            buildChatCommand(this)
+        );
+    }
 
-        const response = await axios.get<TraderQuotes>(`${trade_website}/trader_quotes`);
+    public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
+        return this.execute(interaction);
+    }
 
-        if (response.status !== 200) {
-            return fetchMessage.edit(`Sorry, something went wrong fetching results from ${trade_website}.`);
+    public async messageRun(message: Message) {
+        return this.execute(message);
+    }
+
+    public async execute(origin: CommandOrigin) {
+        const isEphemeral = isEphemeralCommand(origin);
+
+        const message = isEphemeral
+            ? await origin.deferReply({
+                ephemeral: true,
+            })
+            : await origin.reply('Fetching current material prices, just a sec...');
+
+        const response = await axios.get<TraderQuotes>(`${TRADE_WEBSITE}/trader_quotes`);
+
+        if (response.status !== 200 || !response.data) {
+            return message.edit(`Sorry, something went wrong fetching results from ${TRADE_WEBSITE}.`);
         }
 
         const json = response.data;
 
-        if (!json || !json.buy) {
-            return fetchMessage.edit(`Sorry, something went wrong fetching results from ${trade_website}`);
+        function formatMaterial(material: Material) {
+            const data = json.buy[material.id];
+            if (!data) {
+                return;
+            }
+            return {
+                name: `${formatEmoji(material.emoji)} ${material.name}`,
+                value: ` ${emojiPrice(data.p)}`,
+                inline: true,
+            };
         }
 
-        const results = Object.keys(json.buy).map(modelId => {
-            const data = json.buy[modelId];
-            const item = getMaterial(+modelId);
-            if (!item) return;
-            return `${item.name}: ${abbreviatePrice(data.p, 2)}`;
-        }).filter(value => !!value);
-
-        return fetchMessage.edit([
-            `Latest trader prices from ${trade_website}`,
-            '>>> ' + `${results.join('\n')}`
-        ]);
+        return message.edit({
+            content: `Latest trader prices from ${TRADE_WEBSITE}`,
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle('Common Materials')
+                    .addFields(
+                        getMaterials('common').map(formatMaterial).filter(isNonNullable),
+                    ),
+                new EmbedBuilder()
+                    .setTitle('Rare Materials')
+                    .addFields(
+                        getMaterials('rare').map(formatMaterial).filter(isNonNullable),
+                    ),
+            ],
+        });
     }
-}
-
-function abbreviatePrice(price: number, digits: number) {
-    let value = price;
-    const suffixes = ['g', 'k'];
-    let suffix = 0;
-    while (value >= 1000 && suffix < suffixes.length) {
-        value /= 1000;
-        suffix++;
-    }
-
-    return `${value.toFixed(suffix === 0 ? 0 : digits)}${suffixes[suffix]}`;
 }
