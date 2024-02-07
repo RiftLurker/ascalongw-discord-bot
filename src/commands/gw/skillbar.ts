@@ -111,9 +111,6 @@ export class SkillbarCommand extends Command {
 
     public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
         return this.execute(interaction, interaction.options.getString('template', true));
-
-        /* REMOVE STUFF BELOW */
-        // await attachReactions();
     }
 
     public async messageRun(message: Message, args: Args) {
@@ -230,7 +227,7 @@ function buildSkillInfoContent(skillbar: Skillbar, skillIndex: number) {
 
     const skillDescription = skillData
         ? [
-            `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/${encodeURIComponent(skillData.n)}>)`,
+            `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/Game_link:skill_${skillId}>)`,
             `> ${getSkillTypeName(skillData)}. ${formatDescription(skillData, skillbar)}`
         ]
         : [
