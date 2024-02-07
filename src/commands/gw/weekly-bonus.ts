@@ -68,9 +68,9 @@ export class TemplateCommand extends Subcommand {
 
     public async execute(origin: CommandOrigin, activityOffset = 0) {
         const isEphemeral = isEphemeralCommand(origin);
-
-        const activityMeta = getActivityMeta('pve-bonus');
         const date = new Date();
+
+        const activityMeta = getActivityMeta('pve-bonus', date, activityOffset);
         const pveBonus = getActivity('pve-bonus', date, activityOffset);
         const pvpBonus = getActivity('pvp-bonus', date, activityOffset);
 

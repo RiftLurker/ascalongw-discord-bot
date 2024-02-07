@@ -1,7 +1,7 @@
 import fs from 'fs';
 import streams from 'memory-streams';
 import * as pureimage from 'pureimage';
-import { Bitmap } from 'pureimage/types/bitmap';
+import { Bitmap } from 'pureimage/dist/bitmap.js';
 
 export function loadImage(path: string) {
     console.log('loading image ' + path);
@@ -11,7 +11,7 @@ export function loadImage(path: string) {
     return pureimage.decodeJPEGFromStream(fs.createReadStream(path));
 }
 export function createCanvas(width: number, height: number) {
-    const canvas = pureimage.make(width, height, {});
+    const canvas = pureimage.make(width, height);
     // canvas.toBuffer = canvasToBuffer;
     return canvas;
 }

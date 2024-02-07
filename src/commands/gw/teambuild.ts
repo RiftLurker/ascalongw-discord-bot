@@ -1,7 +1,7 @@
 import { Args, Command } from '@sapphire/framework';
 import { AttachmentBuilder, Message } from 'discord.js';
 import path from 'node:path';
-import { Bitmap } from 'pureimage/types/bitmap';
+import { Bitmap } from 'pureimage/dist/bitmap.js';
 import { canvasToBuffer, createCanvas, loadImage } from '../../helper/canvas';
 import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
 import { Skillbar, decodeTemplate, getProfessionName } from '../../lib/skills';

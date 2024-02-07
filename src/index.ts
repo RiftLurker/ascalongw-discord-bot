@@ -2,30 +2,33 @@ import { ApplicationCommandRegistries, SapphireClient } from '@sapphire/framewor
 import { ActivityType, GatewayIntentBits, Partials } from 'discord.js';
 import express from 'express';
 
+
 import config from '../config.json';
 
-const client = new SapphireClient({
-    intents: [
-        GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.DirectMessageReactions,
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildMessageReactions,
-    ],
-    partials: [
-        Partials.Message,
-        Partials.Channel,
-        Partials.Reaction,
-    ],
-    loadMessageCommandListeners: true,
-    loadDefaultErrorListeners: true,
-});
+async function initializeClient(token : string) {
+    if(!(token && token.length)) {
+        throw new Error('Invalid token');
+    }
+    const clientArgs = {
+        intents: [
+            GatewayIntentBits.DirectMessages,
+            GatewayIntentBits.DirectMessageReactions,
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.GuildMessageReactions,
+        ],
+        partials: [
+            Partials.Message,
+            Partials.Channel,
+            Partials.Reaction,
+        ],
+        loadMessageCommandListeners: true,
+        loadDefaultErrorListeners: true,
+        baseUserDirectory: __dirname
+    };
 
-const tokens = 'tokens' in config
-    ? config.tokens
-    : [config.token];
+    const client = new SapphireClient(clientArgs);
 
-tokens.forEach(async (token) => {
     await client.login(token);
     client.user?.setPresence({
         activities: [
@@ -35,6 +38,23 @@ tokens.forEach(async (token) => {
             },
         ],
     });
+    return client;
+}
+
+const tokens = 'tokens' in config
+    ? config.tokens
+    : [config.token];
+
+console.log('Application tokens:', tokens);
+
+tokens.forEach(async (token) => {
+    if(!(token && token.length)) {
+        return;
+    }
+    initializeClient(token).catch((e) => {
+        console.error(e);
+    });
+
 });
 
 if (config.devGuild) {
