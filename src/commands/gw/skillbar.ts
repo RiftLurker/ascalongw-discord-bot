@@ -61,7 +61,10 @@ export class SkillbarCommand extends Command {
             const index = DIGITS.indexOf(reaction.emoji.name ?? '');
             if (index === -1) return console.log('invalid emoji');
 
-            const payload = await buildPayload(skillbar, index - 1);
+            const payload = await buildPayload(skillbar, {
+                displayedSkillIndex: index - 1,
+                withInteraction: false,
+            });
             await message.edit(payload);
             await reaction.users.remove(user.id);
         });
@@ -86,7 +89,10 @@ export class SkillbarCommand extends Command {
                 return;
             }
 
-            const payload = await buildPayload(skillbar, skillIndex);
+            const payload = await buildPayload(skillbar, {
+                displayedSkillIndex: skillIndex,
+                withInteraction: true,
+            });
 
             await interaction.reply({
                 ...payload,
@@ -128,15 +134,30 @@ export class SkillbarCommand extends Command {
             });
         }
 
-        const payload = await buildPayload(skillbar);
-        await origin.reply({
+        const payload = await buildPayload(skillbar, {
+            withInteraction: isEphemeral,
+        });
+        const response = await origin.reply({
             ...payload,
             ephemeral: isEphemeral,
         });
+
+        const message = response instanceof Message
+            ? response
+            : !isEphemeral && await response.fetch();
+
+        if (message) {
+            for (let i = 0; i < skillbar.skills.length; i++) {
+                await message.react(DIGITS[i + 1]);
+            }
+        }
     }
 }
 
-async function buildPayload(skillbar: Skillbar, skillIndex?: number) {
+async function buildPayload(skillbar: Skillbar, options: {
+    withInteraction: boolean,
+    displayedSkillIndex?: number,
+}) {
     const canvas = createCanvas(8 * IMAGE_SIZE, IMAGE_SIZE);
     const ctx = canvas.getContext('2d');
 
@@ -149,31 +170,33 @@ async function buildPayload(skillbar: Skillbar, skillIndex?: number) {
         name: `${skillbar.template}.png`,
     });
 
-    const content = buildSkillbarContent(skillbar, skillIndex);
+    const content = buildSkillbarContent(skillbar, options.displayedSkillIndex);
 
-    const components = [
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(
-                new StringSelectMenuBuilder()
-                    .setCustomId(`skillbar-${skillbar.template}`)
-                    .setPlaceholder('Skill Info')
-                    .addOptions(
-                        ...(skillbar.skills.map((skillId, index) => {
-                            const skill = getSkill(skillId);
+    const components = options.withInteraction
+        ? [
+            new ActionRowBuilder<StringSelectMenuBuilder>()
+                .addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId(`skillbar-${skillbar.template}`)
+                        .setPlaceholder('Skill Info')
+                        .addOptions(
+                            ...(skillbar.skills.map((skillId, index) => {
+                                const skill = getSkill(skillId);
 
-                            if (!skill) {
-                                return null;
-                            }
+                                if (!skill) {
+                                    return null;
+                                }
 
-                            return {
-                                label: skill?.n,
-                                value: `${index}`,
-                                emoji: DIGITS[index + 1],
-                            };
-                        }).filter(isNonNullable))
-                    )
-            )
-    ];
+                                return {
+                                    label: skill?.n,
+                                    value: `${index}`,
+                                    emoji: DIGITS[index + 1],
+                                };
+                            }).filter(isNonNullable))
+                        )
+                )
+        ]
+        : [];
 
     return {
         content,

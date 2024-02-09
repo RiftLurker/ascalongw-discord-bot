@@ -129,7 +129,7 @@ function getWeeklyCountdown(endDate: Date) {
 
 function getDailyCountdown(endDate: Date) {
     const now = new Date();
-    const { hours, minutes, seconds } = intervalToDuration({
+    const { hours, minutes } = intervalToDuration({
         start: now,
         end: endDate,
     });
