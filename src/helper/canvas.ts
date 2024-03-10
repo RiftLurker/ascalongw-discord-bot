@@ -12,6 +12,9 @@ export function loadImage(path: string) {
 }
 export function createCanvas(width: number, height: number) {
     const canvas = pureimage.make(width, height);
+    
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, width, height);
     // canvas.toBuffer = canvasToBuffer;
     return canvas;
 }
