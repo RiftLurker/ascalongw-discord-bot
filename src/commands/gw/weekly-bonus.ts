@@ -1,8 +1,9 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import { isFuture } from 'date-fns';
+import { formatDistanceToNowStrict, isFuture } from 'date-fns';
 import { EmbedBuilder, Message } from 'discord.js';
 import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
 import { getActivity, getActivityMeta } from '../../lib/activities';
+import { getDiscordTimestamp } from '../../helper/timestamp';
 
 /**
  * A blank field to create spacing between embed fields.
@@ -74,11 +75,15 @@ export class TemplateCommand extends Subcommand {
         const pveBonus = getActivity('pve-bonus', date, activityOffset);
         const pvpBonus = getActivity('pvp-bonus', date, activityOffset);
 
-        const footer = isFuture(activityMeta.startDate)
-            ? { text: `Starts in ${activityMeta.dailyCountdown}` }
-            : isFuture(activityMeta.endDate)
-                ? { text: `Ends in ${activityMeta.dailyCountdown}` }
-                : null;
+        const dateInfo = isFuture(activityMeta.startDate)
+            ? {
+                name: "Starts",
+                value: getDiscordTimestamp(activityMeta.startDate, "R")
+            }
+            : {
+                name: "Ends",
+                value: getDiscordTimestamp(activityMeta.endDate, "R")
+            }
 
         origin.reply({
             embeds: [
@@ -98,8 +103,8 @@ export class TemplateCommand extends Subcommand {
                             value: pvpBonus.info,
                             inline: true,
                         },
+                        dateInfo
                     )
-                    .setFooter(footer)
 
             ],
             ephemeral: isEphemeral,

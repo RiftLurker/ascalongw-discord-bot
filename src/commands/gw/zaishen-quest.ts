@@ -3,6 +3,7 @@ import { isFuture } from 'date-fns';
 import { EmbedBuilder, Message } from 'discord.js';
 import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
 import { ACTIVITIES, getActivity, getActivityMeta } from '../../lib/activities';
+import { getDiscordTimestamp } from '../../helper/timestamp';
 
 /**
  * A blank field to create spacing between embed fields.
@@ -77,11 +78,13 @@ export class ZaishenQuestCommand extends Subcommand {
         const date = new Date();
 
         const activityMeta = getActivityMeta('zaishen-mission', date, activityOffset);
-        const footer = isFuture(activityMeta.startDate)
-            ? { text: `Starts in ${activityMeta.dailyCountdown}` }
-            : isFuture(activityMeta.endDate)
-                ? { text: `Ends in ${activityMeta.dailyCountdown}` }
-                : null;
+        const dateInfo = isFuture(activityMeta.startDate)
+            ? { name: "Starts",
+                value: getDiscordTimestamp(activityMeta.startDate, "R")
+              }
+            : { name: "Ends",
+                value: getDiscordTimestamp(activityMeta.endDate, "R")
+              };
 
         return origin.reply({
             embeds: [
@@ -97,8 +100,8 @@ export class ZaishenQuestCommand extends Subcommand {
                         createActivityField('Zaishen Vanquish', 'zaishen-vanquish', date, activityOffset),
                         INLINE_BLANKFIELD,
                         createActivityField('Zaishen Combat', 'zaishen-combat', date, activityOffset),
+                        dateInfo
                     )
-                    .setFooter(footer)
             ],
             ephemeral: isEphemeral,
         });
