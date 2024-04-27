@@ -96,9 +96,7 @@ export function getActivityMeta<T extends keyof typeof ACTIVITIES>(type: T, date
     };
 }
 
-// @fixme using a generic type for data messes with the functions above, will have to look into this and clean up
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getIndex(data: any[], startDate: Date, period: number, date: Date, indexOffset = 0) {
+function getIndex(data: unknown[], startDate: Date, period: number, date: Date, indexOffset = 0) {
     const elapsedTime = date.getTime() - startDate.getTime();
     const elapsedRotations = Math.floor(elapsedTime / period) + indexOffset;
     return elapsedRotations % data.length;

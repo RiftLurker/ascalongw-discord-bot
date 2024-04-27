@@ -5,6 +5,7 @@ import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases }
 import { GIFT_OF_THE_HUNTSMAN, VANGUARD_INITIATE } from '../../helper/emoji';
 import { isNonNullable } from '../../helper/types';
 import { ACTIVITIES, getActivity, getActivityMeta } from '../../lib/activities';
+import { getDiscordTimestamp } from '../../helper/timestamp';
 
 /**
  * A blank field to create spacing between embed fields.
@@ -98,9 +99,9 @@ function createActivityField(name: string, type: keyof typeof ACTIVITIES, date: 
         value: [
             getActivity(type, date, activityOffset),
             isFuture(activityMeta.startDate)
-                ? `Starts in ${activityMeta.dailyCountdown}`
+                ? `Starts ${getDiscordTimestamp(activityMeta.startDate, "R")}`
                 : isFuture(activityMeta.endDate)
-                    ? `Ends in ${activityMeta.dailyCountdown}`
+                    ? `Ends ${getDiscordTimestamp(activityMeta.endDate, "R")}`
                     : null,
         ].filter(isNonNullable).join('\n'),
         inline: true,
