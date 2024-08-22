@@ -1,29 +1,11 @@
 # ascalongw-discord-bot
 
-## Prerequisites
+## Deploy
 
-NodeJS 14 or higher
-NPM 6 or higher
-Vagrant & Virtualbox if deploying to a server or VM
+1. `docker build -t ascalongw .`
+2. Windows: `docker run -d -v "%cd%\config.json":/app/config.json --name ascalongw ascalongw`
+2. Linux: `docker run -d -v "$PWD/config.json":/app/config.json --name ascalongw ascalongw`
 
-`.env.rb` is not included in the repository; see below for use
-`ssh/3vcloud_ssh_key.ppk` is used for production deployment, but the ssh folder is not included in the repository; used for production deployment.
+Make sure you've put your config into /config.json or the docker image won't run.
 
-## Local deployment
-
-`npm install --include-dev`
-`npm run build`
-`npm run dev`
-
-## Local deployment (VM)
-
-Ensure `ENV["ASCALONGW-TOKEN"]` is a valid token for the bot, or define `ENV["ASCALONGW-TOKEN"] = "<your_token>"` in `env.rb`
-
-`vagrant up local --provision` to bring the server up
-`vagrant provision local` to rebuild/restart the bot
-`vagrant halt local` to stop the VM
-
-## Production deployment
-
-`Jon [SNOW]#1816` has SHH keys for production server, but its basically the same as above with a different machine name.
-`rene#0683` has the AscalonGW bot token, ask him for it before deploying
+Optionally export port 80 for a HTTP ping endpoint

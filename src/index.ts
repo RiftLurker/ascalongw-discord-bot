@@ -53,6 +53,7 @@ tokens.forEach(async (token) => {
     }
     initializeClient(token).catch((e) => {
         console.error(e);
+        process.exit(1);
     });
 
 });
