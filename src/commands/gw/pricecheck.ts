@@ -7,6 +7,11 @@ import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } fr
 const TRADE_WEBSITE = 'https://kamadan.gwtoolbox.com';
 const MAX_RESULTS = 10;
 
+interface SearchResult {
+    num_results: number;
+    results: SearchEntry[];
+}
+
 interface SearchEntry {
     t: number;
     s: string;
@@ -55,21 +60,20 @@ export class MaterialsCommand extends Command {
 
         const encodedSearch = encodeURIComponent(search);
 
-        const response = await axios.get<SearchEntry[]>(`${TRADE_WEBSITE}/s/${encodedSearch}`);
+        const response = await axios.get<SearchResult>(`${TRADE_WEBSITE}/s/${encodedSearch}`);
 
         if (response.status !== 200) {
             return message.edit(`Sorry, something went wrong fetching results from ${TRADE_WEBSITE}.`);
         }
 
         const json = response.data;
-        if (!json.length) {
+        if (!json.num_results) {
             return message.edit(`No results found for **${search}**`);
         }
 
         // TODO add pagination
-        const shownData = json.slice(0, MAX_RESULTS);
 
-        const results = shownData.map((data) => {
+        const results = json.results.map((data) => {
             const sender = data.s.padStart(20, ' ');
             const time = formatDistanceToNow(new Date(+data.t), { addSuffix: true });
             const prefix = `${sender}, ${time}:`.padEnd(42, ' ');
