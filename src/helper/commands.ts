@@ -69,12 +69,12 @@ export function buildChatSubCommand(
 }
 
 export function prefixAliases(aliases: string[]) {
-    if (!process.env.PREFIX) {
+    if (!process.env.ASCALONGW_PREFIX) {
         return aliases;
     }
 
     return [
         ...aliases,
-        ...aliases.map((alias) => process.env.PREFIX + alias),
+        ...aliases.map((alias) => process.env.ASCALONGW_PREFIX + alias),
     ];
 }
