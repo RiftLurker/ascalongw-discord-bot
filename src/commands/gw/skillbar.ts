@@ -1,5 +1,5 @@
 import { Args, Command, container } from '@sapphire/framework';
-import { ActionRowBuilder, AttachmentBuilder, Message, MessagePayloadOption, StringSelectMenuBuilder, inlineCode } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ChannelType, Message, MessagePayloadOption, StringSelectMenuBuilder, inlineCode } from 'discord.js';
 import path from 'node:path';
 import { canvasToBuffer, createCanvas, loadImage } from '../../helper/canvas';
 import { Skillbar, decodeTemplate } from '../../lib/skills';
@@ -49,6 +49,10 @@ export class SkillbarCommand extends Command {
             }
 
             const message = reaction.message;
+            if (message.partial) {
+                await message.fetch();
+            }
+
             if (!client.user || message.author?.id !== client.user.id) return;
             if (user.id === client.user.id) return;
 
@@ -61,12 +65,18 @@ export class SkillbarCommand extends Command {
             const index = DIGITS.indexOf(reaction.emoji.name ?? '');
             if (index === -1) return console.log('invalid emoji');
 
-            const payload = await buildPayload(skillbar, {
-                displayedSkillIndex: index - 1,
-                withInteraction: false,
-            });
-            await message.edit(payload);
-            await reaction.users.remove(user.id);
+            try {
+                const payload = await buildPayload(skillbar, {
+                    displayedSkillIndex: index - 1,
+                    withInteraction: false,
+                });
+                await message.edit(payload);
+                if (message.channel.type !== ChannelType.DM) {
+                    await reaction.users.remove(user.id);
+                }
+            } catch (e) {
+                ;
+            }
         });
 
         client.on('interactionCreate', async (interaction) => {

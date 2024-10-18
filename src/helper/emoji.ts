@@ -14,35 +14,35 @@ export const DIGITS = [
 ];
 
 export const PROFESSION: Map<Profession, string> = new Map([
-    [Profession.None, '<:none:769885691941224449>'],
-    [Profession.Warrior, '<:warrior:769885693429678110>'],
-    [Profession.Ranger, '<:ranger:769885693685006336>'],
-    [Profession.Monk, '<:monk:769885692834480149>'],
-    [Profession.Necromancer, '<:necromancer:769885693911498752>'],
-    [Profession.Mesmer, '<:mesmer:769885691386789898>'],
-    [Profession.Elementalist, '<:elementalist:769885689553747988>'],
-    [Profession.Assassin, '<:assassin:769885688363221002>'],
-    [Profession.Ritualist, '<:ritualist:769885693392060457>'],
-    [Profession.Paragon, '<:paragon:769885693656432690>'],
-    [Profession.Dervish, '<:dervish:769885688619204619>'],
+    [Profession.None, '<:none:1296734618967478272>'],
+    [Profession.Warrior, '<:warrior:1296745564062486609>'],
+    [Profession.Ranger, '<:ranger:1296745544143601694>'],
+    [Profession.Monk, '<:monk:1296745514385014814>'],
+    [Profession.Necromancer, '<:necromancer:1296745521662267453>'],
+    [Profession.Mesmer, '<:mesmer:1296745507431120966>'],
+    [Profession.Elementalist, '<:elementalist:1296745497566121984>'],
+    [Profession.Assassin, '<:assassin:1296745487528886273>'],
+    [Profession.Ritualist, '<:ritualist:1296745556470792232>'],
+    [Profession.Paragon, '<:paragon:1296745535641882644>'],
+    [Profession.Dervish, '<:dervish:1296745474530738196>'],
 ]);
 
-export const TEMPLATE = '<:template:769885690610712587>';
-export const ADRENALINE = '<:adrenaline:769885687788732417>';
-export const ENERGY = '<:energy:769885688966545490>';
-export const SACRIFICE = '<:sacrifice:769885690607042560>';
-export const ACTIVATION = '<:activation:769885687700520991>';
-export const RECHARGE = '<:recharge:769885690204389407>';
-export const OVERCAST = '<:overcast:769885690221297674>';
-export const UPKEEP = '<:upkeep:769885690670350377>';
+export const TEMPLATE = '<:template:1296734678526591040>';
+export const ADRENALINE = '<:adrenaline:1296734525904130141>';
+export const ENERGY = '<:energy:1296734585043947591>';
+export const SACRIFICE = '<:sacrifice:1296734669517357136>';
+export const ACTIVATION = '<:activation:1296734509898797097>';
+export const RECHARGE = '<:recharge:1296734651309621288>';
+export const OVERCAST = '<:overcast:1296734626412494932>';
+export const UPKEEP = '<:upkeep:1296734686936170536>';
 
-export const GOLD = '<:Gold:1204443858553798697>';
-export const PLATINUM = '<:Platinum:1204443860093378630>';
+export const GOLD = '<:gold:1296735825911877692>';
+export const PLATINUM = '<:platinum:1296735847814660178>';
 
-export const GIFT_OF_THE_HUNTSMAN = '<:Gift_of_the_Huntsman:1204509618735419474>';
+export const GIFT_OF_THE_HUNTSMAN = '<:gift_of_the_huntsman:1296736654551154732>';
 
-export const ZAISHEN_COPPER_COIN = '<:zaishen_copper_coin:796371200280100884>';
+export const ZAISHEN_COPPER_COIN = '<:zaishen_copper_coin:1296734704204251137>';
 
-export const VANGUARD_INITIATE = '<:Vanguard_Initiate:1204509620471734362>';
+export const VANGUARD_INITIATE = '<:vanguard_initiate:1296736832058556448>';
 
 export const EDIT = '\uD83D\uDCDD';

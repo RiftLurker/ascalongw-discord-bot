@@ -2,8 +2,7 @@ import { ApplicationCommandRegistries, SapphireClient } from '@sapphire/framewor
 import { ActivityType, GatewayIntentBits, Partials } from 'discord.js';
 import express from 'express';
 
-
-import config from '../config.json';
+import 'dotenv/config';
 
 async function initializeClient(token : string) {
     if(!(token && token.length)) {
@@ -41,9 +40,12 @@ async function initializeClient(token : string) {
     return client;
 }
 
-const tokens = 'tokens' in config
-    ? config.tokens
-    : [config.token];
+if (!process.env.DISCORD_TOKEN) {
+    console.error('No token provided');
+    process.exit(1);
+}
+
+const tokens = [process.env.DISCORD_TOKEN];
 
 console.log('Application tokens:', tokens);
 
@@ -58,8 +60,8 @@ tokens.forEach(async (token) => {
 
 });
 
-if (config.devGuild) {
-    ApplicationCommandRegistries.setDefaultGuildIds([config.devGuild]);
+if (process.env.ASCALONGW_DEVSERVER) {
+    ApplicationCommandRegistries.setDefaultGuildIds([process.env.ASCALONGW_DEVSERVER]);
 }
 
 setInterval(function() {
@@ -79,4 +81,4 @@ app.get('/', (req, res) => {
     res.send('ok');
 });
 
-app.listen(config.port ?? 80);
+app.listen(process.env.PORT ?? 80);

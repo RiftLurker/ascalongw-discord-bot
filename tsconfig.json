@@ -8,6 +8,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "allowArbitraryExtensions": true,
+    "sourceMap": true,
     "typeRoots": [
       "src/@types",
       "node_modules/@types"
@@ -15,8 +16,7 @@
   },
   "include": [
     "assets/**/*.d.json.ts",
-    "src/**/*.ts",
-    "config.d.json.ts",
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

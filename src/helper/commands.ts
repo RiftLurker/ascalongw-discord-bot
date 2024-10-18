@@ -1,7 +1,6 @@
 import { Command } from '@sapphire/framework';
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { Message, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
-import config from '../../config.json';
 
 export type CommandOrigin = Message | Command.ChatInputCommandInteraction
 
@@ -70,12 +69,12 @@ export function buildChatSubCommand(
 }
 
 export function prefixAliases(aliases: string[]) {
-    if (!config.prefix) {
+    if (!process.env.PREFIX) {
         return aliases;
     }
 
     return [
         ...aliases,
-        ...aliases.map((alias) => config.prefix + alias),
+        ...aliases.map((alias) => process.env.PREFIX + alias),
     ];
 }
