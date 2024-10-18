@@ -140,7 +140,7 @@ export class SkillbarCommand extends Command {
         if (!skillbar) {
             return origin.reply({
                 content: `${inlineCode(template)} is not a valid skill template`,
-                ephemeral: isEphemeral,
+                ephemeral: true,
             });
         }
 
