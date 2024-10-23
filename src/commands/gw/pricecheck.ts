@@ -80,9 +80,23 @@ export class MaterialsCommand extends Command {
             return `${prefix} ${data.m}`;
         });
 
-        return await message.edit([
-            `Latest ${results.length} results for **${search}** from ${TRADE_WEBSITE}/search/${encodedSearch}`,
-            codeBlock(results.join('\n')),
-        ].join('\n'));
+        let longestContent = null;
+
+        for (let i = 0; i < results.length; i++) {
+            const content = [
+                `Latest ${i} results for **${search}** from ${TRADE_WEBSITE}/search/${encodedSearch}`,
+                codeBlock(results.slice(0, i).join('\n')),
+            ].join('\n');
+
+            if (content.length > 2000) {
+                break;
+            }
+            
+            longestContent = content;
+        }
+
+        if (longestContent) {
+            return await message.edit(longestContent);
+        }
     }
 }
