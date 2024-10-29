@@ -1,19 +1,19 @@
-FROM node:lts-alpine3.20 as base
+FROM node:lts-alpine3.20 AS base
 WORKDIR /app
 
-FROM base as deps
+FROM base AS deps
 COPY package.json package-lock.json ./
 
 RUN npm ci --omit=dev
 
 
-FROM deps as devdeps
+FROM deps AS devdeps
 COPY --from=deps /app .
 
 RUN npm ci
 
 
-FROM devdeps as builder
+FROM devdeps AS builder
 
 COPY tsconfig.json .
 COPY --from=devdeps /app .
@@ -23,7 +23,7 @@ COPY ./assets/ ./assets/
 RUN npx tsc
 
 
-FROM base as runner
+FROM base AS runner
 
 ENV NODE_ENV=production
 
