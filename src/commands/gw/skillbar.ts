@@ -253,10 +253,10 @@ function buildSkillInfoContent(skillbar: Skillbar, skillIndex: number) {
     if (skillData?.z?.c) skillInfo.push(`${skillData.z.c} ${ACTIVATION}`);
     if (skillData?.z?.r) skillInfo.push(`${skillData.z.r} ${RECHARGE}`);
     if (skillData?.z?.x) skillInfo.push(`${skillData.z.x} ${OVERCAST}`);
-    if (skillData?.p) skillInfo.push(`Prof: **${getProfessionName(skillData.p)}**`);
-    if (skillData?.a) skillInfo.push(`Attrb: **${getAttributeName(skillData.a)}**`);
-    if (skillData?.tt) skillInfo.push(`Title: **${getTitleName(skillData.tt)}**`);
-    if (skillData?.t) skillInfo.push(`Type: **${getSkillTypeName(skillData)}**`);
+    if (skillData?.p && getProfessionName(skillData.p)) skillInfo.push(`Prof: **${getProfessionName(skillData.p)}**`);
+    if (skillData?.a && getAttributeName(skillData.a)) skillInfo.push(`Attrb: **${getAttributeName(skillData.a)}**`);
+    if (skillData?.tt && getTitleName(skillData.tt)) skillInfo.push(`Title: **${getTitleName(skillData.tt)}**`);
+    if (skillData?.t && getSkillTypeName(skillData)) skillInfo.push(`Type: **${getSkillTypeName(skillData)}**`);
 
     const skillDescription = skillData
         ? [
