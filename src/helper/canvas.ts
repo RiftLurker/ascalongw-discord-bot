@@ -34,7 +34,6 @@ export async function canvasToBuffer(canvas: Bitmap) {
 }
 
 export const ICON_SKILL_SIZE = 64;
-export const ICON_SKILL_SIZE_HD = 128;
 
 export async function drawSkill(
     ctx: pureimage.Context,
@@ -51,7 +50,7 @@ export async function drawSkill(
     const image = await loadImage(join(ASSETS, 'skills', `${icon}.png`));
 
     if (hdIcons) {
-        ctx.drawImage(image, 0, 0, ICON_SKILL_SIZE_HD, ICON_SKILL_SIZE_HD, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
+        ctx.drawImage(image, 0, 0, image.width, image.width, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
     }
     else {
         ctx.drawImage(image, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
