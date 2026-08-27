@@ -3,6 +3,7 @@ import { AttachmentBuilder, Message } from 'discord.js';
 import path from 'node:path';
 import { ICON_SKILL_SIZE, canvasToBuffer, createCanvas, drawSkill, loadImage } from '../../helper/canvas';
 import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
+import { decodePawned } from '../../lib/pawned';
 import { GameMode, Skillbar, decodeTemplate, getProfessionName, getSkill } from '../../lib/skills';
 
 const assets = path.join(__dirname, '../../../assets');
@@ -24,13 +25,13 @@ export class SkillbarCommand extends Command {
                     .addStringOption((option) => (
                         option
                             .setName('templates')
-                            .setDescription('the skillbar templates to display, space separated')
+                            .setDescription('The skillbar templates to display, space separated or a paw·ned² teambuild')
                             .setRequired(true)
                     ))
                     .addBooleanOption(option => (
                         option
                             .setName('pvp')
-                            .setDescription('this teambuild is intended for PvP')
+                            .setDescription('This teambuild is intended for PvP')
                     ))
                     .addBooleanOption(option => (
                         option
@@ -43,26 +44,36 @@ export class SkillbarCommand extends Command {
 
     public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
         const rawTemplates = interaction.options.getString('templates', true);
-        return this.execute(interaction, rawTemplates.split(' '), {
+        return this.execute(interaction, rawTemplates, {
             mode: interaction.options.getBoolean('pvp') ? 'PvP' : 'PvE',
             highResolutionIcons: interaction.options.getBoolean('high-resolution-icons') ?? false,
         });
     }
 
     public async messageRun(message: Message, args: Args) {
-        return this.execute(message, await args.repeat('string'), {
+        return this.execute(message, (await args.repeat('string')).join(' '), {
             mode: args.getFlags('pvp') ? 'PvP' : 'PvE',
             highResolutionIcons: args.getFlags('high-resolution-icons'),
         });
     }
 
-    public async execute(origin: CommandOrigin, templates: string[], options: {
+    public async execute(origin: CommandOrigin, templates: string, options: {
         mode: GameMode,
         highResolutionIcons: boolean,
     }) {
         const isEphemeral = isEphemeralCommand(origin, false);
 
-        const skillbars = templates.map(decodeTemplate).filter((skillbar): skillbar is Skillbar => skillbar !== null);
+        function decodeTeambuild(str: string) {
+            try {
+                const { builds } = decodePawned(str);
+                return builds.map(build => build.skillbar);
+            }
+            catch {
+                return str.split(' ').map(decodeTemplate).filter((skillbar): skillbar is Skillbar => skillbar !== null);
+            }
+        }
+
+        const skillbars = decodeTeambuild(templates);
         const canvas = createCanvas(9 * ICON_SKILL_SIZE, skillbars.length * ICON_SKILL_SIZE);
         const ctx = canvas.getContext('2d');
 
@@ -93,7 +104,7 @@ export class SkillbarCommand extends Command {
 
         const buffer = await canvasToBuffer(canvas);
         const attachment = new AttachmentBuilder(buffer, {
-            name: `${templates.join('|')}.png`,
+            name: `${skillbars.map(({ template }) => template).join('|')}.png`,
         });
 
         return origin.reply({
