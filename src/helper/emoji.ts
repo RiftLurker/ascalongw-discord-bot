@@ -46,3 +46,9 @@ export const ZAISHEN_COPPER_COIN = '<:zaishen_copper_coin:1296734704204251137>';
 export const VANGUARD_INITIATE = '<:vanguard_initiate:1296736832058556448>';
 
 export const EDIT = '\uD83D\uDCDD';
+
+export const REFORGED_MODE = '<:ReforgedMode:1542468851705315358>';
+export const MELANDRUS_ACCORD = '<:MelandrusAccord:1542468850073866241>';
+export const DHUUM_COVENANT = '<:DhuumCovenant:1542468848748601414>';
+
+export const PLAYER_VS_PLAYER = '<:PvP:1542474583276519480>';

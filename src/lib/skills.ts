@@ -1,11 +1,45 @@
-import roundHalfEven from 'round-half-even';
 import skills from '../../assets/skills.json';
 
-export function getSkill(skillId : number) : typeof skills[number] {
-    return skills[skillId] ?? null;
+export type Skill = typeof skills extends Record<string, infer T> ? T: unknown;
+
+type SkillValueShortHand = keyof NonNullable<Skill['v']>;
+
+export type GameMode = 'PvE' | 'PvP'
+
+export function getSkill(skillId: number, {
+    mode = 'PvE'
+}: {
+  mode: GameMode
+} = {
+    mode: 'PvE',
+}): Skill | null {
+    const skill = skills[`${skillId}`];
+
+    if (!skill) {
+        return null;
+    }
+
+    const skillMode = skill.z?.sp && skill.z.sp & 0x400000 ? 'PvP' : 'PvE';
+
+    if (skillMode !== mode && skill.alt) {
+        return getSkill(skill.alt, { mode });
+    }
+
+    return skill;
 }
 
-export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) {
+export function getSkillIcon(skillData: NonNullable<Skill>, { highResolution = false }: {
+  highResolution?: boolean
+} = {
+    highResolution: false
+}) {
+    const icon = highResolution && skillData.i.h ? skillData.i.h : skillData.i.d;
+    return icon;
+}
+
+export function getSkillTypeName(
+    skillData: NonNullable<Skill>,
+) {
     return skillData.e ? `Elite ${getTypeName()}` : getTypeName();
 
     function getTypeName() {
@@ -96,7 +130,11 @@ export function getSkillTypeName(skillData: NonNullable<typeof skills[number]>) 
     }
 }
 
-export function formatDescription(skillData: NonNullable<typeof skills[number]>, skillbar: Skillbar, concise = false) {
+export function formatDescription(
+    skillData: NonNullable<Skill>,
+    skillbar: Skillbar,
+    concise = false,
+) {
     let description = concise ? skillData.cd : skillData.d;
 
     if (!skillData.v) {
@@ -105,15 +143,23 @@ export function formatDescription(skillData: NonNullable<typeof skills[number]>,
 
     const hasTitle = skillData.tt !== undefined;
 
+    const mapValueShorthands: Record<SkillValueShortHand, string> = {
+        s: 'scale',
+        b: 'bonus',
+        d: 'duration',
+    };
+
     for (const [type, [at0, at15]] of Object.entries(skillData.v)) {
         const replace = hasTitle
             ? `${at0}..${at15}`
             : (() => {
-                const rank = (skillData.a !== undefined && skillbar.attributes[skillData.a]) || 0;
-                return `${roundHalfEven(((at15 - at0) / 15) * rank + at0, 0)}`;
+                const rank =
+            (skillData.a !== undefined && skillbar.attributes[skillData.a]) ||
+            0;
+                return `${Math.round(((at15 - at0) / 15) * rank + at0)}`;
             })();
         description = description.replace(
-            `%${type}0..%${type}15`,
+            `{${mapValueShorthands[type as SkillValueShortHand]}}`,
             `__**${replace}**__`,
         );
     }
@@ -149,7 +195,9 @@ const PROFESSION_ABBREVIATION: Record<Profession, string> = {
     [Profession.Dervish]: 'D',
 };
 
-export function getProfessionAbbreviation<T extends keyof typeof PROFESSION_ABBREVIATION>(profession: T): typeof PROFESSION_ABBREVIATION[T] {
+export function getProfessionAbbreviation<
+  T extends keyof typeof PROFESSION_ABBREVIATION,
+>(profession: T): (typeof PROFESSION_ABBREVIATION)[T] {
     return PROFESSION_ABBREVIATION[profession];
 }
 
@@ -167,7 +215,9 @@ const PROFESSION_NAME: Record<Profession, string> = {
     [Profession.Dervish]: 'Dervish',
 };
 
-export function getProfessionName<T extends keyof typeof PROFESSION_NAME>(profession: T): typeof PROFESSION_NAME[T] {
+export function getProfessionName<T extends keyof typeof PROFESSION_NAME>(
+    profession: T,
+): (typeof PROFESSION_NAME)[T] {
     return PROFESSION_NAME[profession];
 }
 
@@ -193,7 +243,9 @@ const TITLE_NAMES: Record<Title, string> = {
     [Title.NornRank]: 'Norn Rank',
 };
 
-export function getTitleName<T extends keyof typeof TITLE_NAMES>(title: T): typeof TITLE_NAMES[T] {
+export function getTitleName<T extends keyof typeof TITLE_NAMES>(
+    title: T,
+): (typeof TITLE_NAMES)[T] {
     return TITLE_NAMES[title];
 }
 
@@ -258,7 +310,9 @@ const ATTRIBUTE_NAMES: Record<Attribute, string> = {
     [Attribute.None]: 'None',
 };
 
-export function getAttributeName<T extends keyof typeof ATTRIBUTE_NAMES>(attribute: T): typeof ATTRIBUTE_NAMES[T] {
+export function getAttributeName<T extends keyof typeof ATTRIBUTE_NAMES>(
+    attribute: T,
+): (typeof ATTRIBUTE_NAMES)[T] {
     return ATTRIBUTE_NAMES[attribute];
 }
 
@@ -266,16 +320,17 @@ const TEMPLATE_TYPE = 14;
 const VERSION = 0;
 
 export interface Skillbar {
-    type: typeof TEMPLATE_TYPE,
-    version: typeof VERSION,
-    primary: Profession,
-    secondary: Profession,
-    attributes: Partial<Record<Attribute, number>>,
-    skills: number[];
-    template: string;
+  type: typeof TEMPLATE_TYPE;
+  version: typeof VERSION;
+  primary: Profession;
+  secondary: Profession;
+  attributes: Partial<Record<Attribute, number>>;
+  skills: number[];
+  template: string;
 }
 
-const _base64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const _base64 =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 export function decodeTemplate(template: string): Skillbar | null {
     const binary = codetobin(template);
@@ -306,42 +361,63 @@ export function decodeTemplate(template: string): Skillbar | null {
     const skillbarSkills = new Array(8);
     for (let i = 0; i < 8; i++) {
         skillbarSkills[i] = read(skillBitLength);
-        if(!skillbarSkills[0] && !getSkill(skillbarSkills[i])) {
+        if (!skillbarSkills[0] && !getSkill(skillbarSkills[i])) {
             return null;
         }
     }
 
-    return {
+    const skillbar = {
         type: templateType,
         version,
         primary,
         secondary,
         attributes,
-        skills: skillbarSkills,
-        template,
+        skills: skillbarSkills
+    } as const;
+
+    return {
+        ...skillbar,
+        template: encodeSkillbar(skillbar),
     };
 }
 
-export function encodeSkillbar(skillbar: Exclude<Skillbar, 'template'>): string {
+export function encodeSkillbar(
+    skillbar: Omit<Skillbar, 'template'>,
+): string {
     const type = valbin(skillbar.type, 4);
     const version = valbin(skillbar.version, 4);
 
-    const professionBitLength = Math.max(4, valbin(skillbar.primary, 0).length, valbin(skillbar.secondary, 0).length);
+    const professionBitLength = Math.max(
+        4,
+        valbin(skillbar.primary, 0).length,
+        valbin(skillbar.secondary, 0).length,
+    );
     const primary = valbin(skillbar.primary, professionBitLength);
     const secondary = valbin(skillbar.secondary, professionBitLength);
 
     const attributeCount = valbin(Object.keys(skillbar.attributes).length, 4);
-    const attributeBitLength = Math.max(4, ...Object.keys(skillbar.attributes).map(a => valbin(a, 0).length));
-    const attributes = Object.entries(skillbar.attributes).reduce((out, [attributeId, attributeLevel]) => {
-        return [
-            ...out,
-            valbin(attributeId, attributeBitLength),
-            valbin(attributeLevel!, 4), // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        ];
-    }, [] as string[]);
+    const attributeBitLength = Math.max(
+        4,
+        ...Object.keys(skillbar.attributes).map((a) => valbin(a, 0).length),
+    );
+    const attributes = Object.entries(skillbar.attributes).reduce(
+        (out, [attributeId, attributeLevel]) => {
+            return [
+                ...out,
+                valbin(attributeId, attributeBitLength),
+                valbin(attributeLevel!, 4), // eslint-disable-line @typescript-eslint/no-non-null-assertion
+            ];
+        },
+    [] as string[],
+    );
 
-    const skillBitLength = Math.max(8, ...skillbar.skills.map(skillId => valbin(skillId, 0).length));
-    const skillbarSkills = skillbar.skills.map(skillId => valbin(skillId, skillBitLength));
+    const skillBitLength = Math.max(
+        8,
+        ...skillbar.skills.map((skillId) => valbin(skillId, 0).length),
+    );
+    const skillbarSkills = skillbar.skills.map((skillId) =>
+        valbin(skillId, skillBitLength),
+    );
 
     const template = [
         type,
@@ -372,7 +448,7 @@ function strrev(s: string) {
 }
 function charindex(c: string) {
     const n = _base64.length;
-    for(let i = 0; i < n; i++) if(_base64.substr(i, 1) == c) return i;
+    for (let i = 0; i < n; i++) if (_base64.substr(i, 1) == c) return i;
     throw Error;
 }
 
@@ -388,8 +464,8 @@ function codetobin(template: string) {
 function bintocode(bin: string) {
     const r = bin.length % 6;
     let c = '';
-    if(r != 0) bin = binpadright(bin, bin.length + 6 - r);
-    while(bin.length > 0) {
+    if (r != 0) bin = binpadright(bin, bin.length + 6 - r);
+    while (bin.length > 0) {
         c += _base64.substr(parseInt(strrev(bin.substr(0, 6)), 2), 1);
         bin = bin.substr(6);
     }

@@ -1,9 +1,9 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
-import { formatDistanceToNowStrict, isFuture } from 'date-fns';
+import { isFuture } from 'date-fns';
 import { EmbedBuilder, Message } from 'discord.js';
 import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
-import { getActivity, getActivityMeta } from '../../lib/activities';
 import { getDiscordTimestamp } from '../../helper/timestamp';
+import { getActivity, getActivityMeta } from '../../lib/activities';
 
 /**
  * A blank field to create spacing between embed fields.
@@ -77,13 +77,13 @@ export class TemplateCommand extends Subcommand {
 
         const dateInfo = isFuture(activityMeta.startDate)
             ? {
-                name: "Starts",
-                value: getDiscordTimestamp(activityMeta.startDate, "R")
+                name: 'Starts',
+                value: getDiscordTimestamp(activityMeta.startDate, 'R')
             }
             : {
-                name: "Ends",
-                value: getDiscordTimestamp(activityMeta.endDate, "R")
-            }
+                name: 'Ends',
+                value: getDiscordTimestamp(activityMeta.endDate, 'R')
+            };
 
         origin.reply({
             embeds: [

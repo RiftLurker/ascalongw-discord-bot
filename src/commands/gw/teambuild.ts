@@ -1,14 +1,11 @@
 import { Args, Command } from '@sapphire/framework';
 import { AttachmentBuilder, Message } from 'discord.js';
 import path from 'node:path';
-import { Bitmap } from 'pureimage/dist/bitmap.js';
-import { canvasToBuffer, createCanvas, loadImage } from '../../helper/canvas';
+import { ICON_SKILL_SIZE, canvasToBuffer, createCanvas, drawSkill, loadImage } from '../../helper/canvas';
 import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
-import { Skillbar, decodeTemplate, getProfessionName } from '../../lib/skills';
+import { GameMode, Skillbar, decodeTemplate, getProfessionName, getSkill } from '../../lib/skills';
 
 const assets = path.join(__dirname, '../../../assets');
-
-const IMAGE_SIZE = 64;
 
 export class SkillbarCommand extends Command {
     public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -30,35 +27,69 @@ export class SkillbarCommand extends Command {
                             .setDescription('the skillbar templates to display, space separated')
                             .setRequired(true)
                     ))
+                    .addBooleanOption(option => (
+                        option
+                            .setName('pvp')
+                            .setDescription('this teambuild is intended for PvP')
+                    ))
+                    .addBooleanOption(option => (
+                        option
+                            .setName('high-resolution-icons')
+                            .setDescription('Use high resolution icons')
+                    ))
             ))
         );
     }
 
     public async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
         const rawTemplates = interaction.options.getString('templates', true);
-        return this.execute(interaction, rawTemplates.split(' '));
+        return this.execute(interaction, rawTemplates.split(' '), {
+            mode: interaction.options.getBoolean('pvp') ? 'PvP' : 'PvE',
+            highResolutionIcons: interaction.options.getBoolean('high-resolution-icons') ?? false,
+        });
     }
 
     public async messageRun(message: Message, args: Args) {
-        return this.execute(message, await args.repeat('string'));
+        return this.execute(message, await args.repeat('string'), {
+            mode: args.getFlags('pvp') ? 'PvP' : 'PvE',
+            highResolutionIcons: args.getFlags('high-resolution-icons'),
+        });
     }
 
-    public async execute(origin: CommandOrigin, templates: string[]) {
+    public async execute(origin: CommandOrigin, templates: string[], options: {
+        mode: GameMode,
+        highResolutionIcons: boolean,
+    }) {
         const isEphemeral = isEphemeralCommand(origin, false);
 
         const skillbars = templates.map(decodeTemplate).filter((skillbar): skillbar is Skillbar => skillbar !== null);
-        const canvas = createCanvas(9 * IMAGE_SIZE, skillbars.length * IMAGE_SIZE);
+        const canvas = createCanvas(9 * ICON_SKILL_SIZE, skillbars.length * ICON_SKILL_SIZE);
         const ctx = canvas.getContext('2d');
 
-        const images = await Promise.all(skillbars.reduce((acc, skillbar) => {
-            return [
-                ...acc,
-                loadImage(path.join(assets, 'professions', `${getProfessionName(skillbar.primary)}.png`)),
-                ...skillbar.skills.map(skillID => loadImage(path.join(assets, 'skills', `${skillID}.jpg`))),
-            ];
-        }, [] as Promise<Bitmap>[]));
+        await Promise.all(
+            skillbars.map(async (skillbar, skillbarIndex) => {
+                const image = await loadImage(path.join(assets, 'professions', `${getProfessionName(skillbar.primary)}.png`));
+                ctx.drawImage(image, 0, skillbarIndex * ICON_SKILL_SIZE);
 
-        images.forEach((image, index) => ctx.drawImage(image, (index % 9) * IMAGE_SIZE, Math.floor(index / 9) * IMAGE_SIZE, IMAGE_SIZE, IMAGE_SIZE));
+                await Promise.all(skillbar.skills
+                    .map((skillId) => {
+                        return getSkill(skillId, { mode: options.mode });
+                    })
+                    .map((skill, skillIndex) => {
+                        if (!skill) {
+                            return;
+                        }
+                        return drawSkill(
+                            ctx,
+                            skill,
+                            skillIndex * ICON_SKILL_SIZE + ICON_SKILL_SIZE,
+                            skillbarIndex * ICON_SKILL_SIZE,
+                            {
+                                highResolution: options.highResolutionIcons,
+                            }
+                        );
+                    }));
+            }));
 
         const buffer = await canvasToBuffer(canvas);
         const attachment = new AttachmentBuilder(buffer, {

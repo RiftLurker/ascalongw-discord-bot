@@ -5,7 +5,6 @@ import { Message, codeBlock } from 'discord.js';
 import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
 
 const TRADE_WEBSITE = 'https://kamadan.gwtoolbox.com';
-const MAX_RESULTS = 10;
 
 interface SearchResult {
     num_results: number;
@@ -91,7 +90,7 @@ export class MaterialsCommand extends Command {
             if (content.length > 2000) {
                 break;
             }
-            
+
             longestContent = content;
         }
 
