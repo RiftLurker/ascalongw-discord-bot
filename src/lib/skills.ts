@@ -361,9 +361,6 @@ export function decodeTemplate(template: string): Skillbar | null {
     const skillbarSkills = new Array(8);
     for (let i = 0; i < 8; i++) {
         skillbarSkills[i] = read(skillBitLength);
-        if (!skillbarSkills[0] && !getSkill(skillbarSkills[i])) {
-            return null;
-        }
     }
 
     const skillbar = {
