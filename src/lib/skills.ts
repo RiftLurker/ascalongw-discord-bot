@@ -28,12 +28,12 @@ export function getSkill(skillId: number, {
     return skill;
 }
 
-export function getSkillIcon(skillData: NonNullable<Skill>, { highResolution = false }: {
-  highResolution?: boolean
+export function getSkillIcon(skillData: NonNullable<Skill>, { hdIcons = false }: {
+  hdIcons?: boolean
 } = {
-    highResolution: false
+    hdIcons: false
 }) {
-    const icon = highResolution && skillData.i.h ? skillData.i.h : skillData.i.d;
+    const icon = hdIcons && skillData.i.h ? skillData.i.h : skillData.i.d;
     return icon;
 }
 

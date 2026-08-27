@@ -41,16 +41,16 @@ export async function drawSkill(
     skillData: NonNullable<Skill>,
     dx: number,
     dy: number,
-    { highResolution = false }: {
-  highResolution?: boolean
-} = { highResolution: false }) {
-    const icon = getSkillIcon(skillData, { highResolution });
+    { hdIcons = false }: {
+  hdIcons?: boolean
+} = { hdIcons: false }) {
+    const icon = getSkillIcon(skillData, { hdIcons });
     if (!icon) {
         return;
     }
     const image = await loadImage(join(ASSETS, 'skills', `${icon}.png`));
 
-    if (highResolution) {
+    if (hdIcons) {
         ctx.drawImage(image, 0, 0, ICON_SKILL_SIZE_HD, ICON_SKILL_SIZE_HD, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
     }
     else {

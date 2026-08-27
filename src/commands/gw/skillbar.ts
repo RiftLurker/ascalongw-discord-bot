@@ -66,14 +66,14 @@ export class SkillbarCommand extends Command {
             if (index === -1) return console.log('invalid emoji');
 
             const mode = message.content?.includes(PLAYER_VS_PLAYER) ? 'PvP' : 'PvE';
-            const highResolutionIcons = message.content?.includes(REFORGED_MODE);
+            const hdIcons = message.content?.includes(REFORGED_MODE);
 
             try {
                 const payload = await buildPayload(skillbar, {
                     displayedSkillIndex: index - 1,
                     withInteraction: false,
                     mode,
-                    highResolutionIcons: highResolutionIcons,
+                    hdIcons,
                 });
                 await message.edit(payload);
                 if (message.channel.type !== ChannelType.DM) {
@@ -108,13 +108,13 @@ export class SkillbarCommand extends Command {
             const { message } = interaction;
 
             const mode = message.content?.includes(PLAYER_VS_PLAYER) ? 'PvP' : 'PvE';
-            const highResolutionIcons = message.content?.includes(REFORGED_MODE);
+            const hdIcons = message.content?.includes(REFORGED_MODE);
 
             const payload = await buildPayload(skillbar, {
                 displayedSkillIndex: skillIndex,
                 withInteraction: true,
                 mode: mode as GameMode,
-                highResolutionIcons,
+                hdIcons,
             });
 
             await interaction.reply({
@@ -141,8 +141,8 @@ export class SkillbarCommand extends Command {
                     ))
                     .addBooleanOption(option => (
                         option
-                            .setName('high-resolution-icons')
-                            .setDescription('Use high resolution icons')
+                            .setName('hd-icons')
+                            .setDescription('Use HD icons')
                     ))
             ))
         );
@@ -153,7 +153,7 @@ export class SkillbarCommand extends Command {
             interaction.options.getString('template', true),
             {
                 mode: interaction.options.getBoolean('pvp') ? 'PvP' : 'PvE',
-                highResolutionIcons: interaction.options.getBoolean('high-resolution-icons') ?? false,
+                hdIcons: interaction.options.getBoolean('hd-icons') ?? false,
             },
         );
     }
@@ -161,13 +161,13 @@ export class SkillbarCommand extends Command {
     public async messageRun(message: Message, args: Args) {
         return this.execute(message, await args.pick('string'), {
             mode: args.getFlags('pvp') ? 'PvP' : 'PvE',
-            highResolutionIcons: args.getFlags('high-resolution-icons'),
+            hdIcons: args.getFlags('hd-icons'),
         });
     }
 
     public async execute(origin: CommandOrigin, template: string, options: {
         mode: GameMode,
-        highResolutionIcons: boolean,
+        hdIcons: boolean,
     }) {
         const isEphemeral = isEphemeralCommand(origin, false);
 
@@ -182,7 +182,7 @@ export class SkillbarCommand extends Command {
         const payload = await buildPayload(skillbar, {
             withInteraction: isEphemeral,
             mode: options.mode,
-            highResolutionIcons: options.highResolutionIcons,
+            hdIcons: options.hdIcons,
         });
         const response = await origin.reply({
             ...payload,
@@ -204,7 +204,7 @@ export class SkillbarCommand extends Command {
 async function buildPayload(skillbar: Skillbar, options: {
     withInteraction: boolean,
     displayedSkillIndex?: number,
-    highResolutionIcons?: boolean,
+    hdIcons?: boolean,
     mode: GameMode,
 }) {
     const canvas = createCanvas(8 * IMAGE_SIZE, IMAGE_SIZE);
@@ -224,7 +224,7 @@ async function buildPayload(skillbar: Skillbar, options: {
                 skillIndex * ICON_SKILL_SIZE,
                 0,
                 {
-                    highResolution: options.highResolutionIcons
+                    hdIcons: options.hdIcons
                 }
             );
         })
@@ -237,7 +237,7 @@ async function buildPayload(skillbar: Skillbar, options: {
     const content = buildSkillbarContent(skillbar, {
         shownSkillIndex: options.displayedSkillIndex,
         mode: options.mode,
-        highResolutionIcons: options.highResolutionIcons,
+        hdIcons: options.hdIcons,
     });
 
     const components = options.withInteraction
@@ -278,7 +278,7 @@ async function buildPayload(skillbar: Skillbar, options: {
 function buildSkillbarContent(skillbar: Skillbar, options: {
     shownSkillIndex?: number,
     mode: GameMode
-    highResolutionIcons?: boolean,
+    hdIcons?: boolean,
 }) {
     const primary = `${PROFESSION.get(skillbar.primary)} ${getProfessionAbbreviation(skillbar.primary)}`;
     const secondary = `${getProfessionAbbreviation(skillbar.secondary)} ${PROFESSION.get(skillbar.secondary)}`;
@@ -292,7 +292,7 @@ function buildSkillbarContent(skillbar: Skillbar, options: {
         return arr;
     };
     return [
-        `${primary} / ${secondary} -- \`${skillbar.template}\` -- ${TEMPLATE}${options.highResolutionIcons ? ` ${REFORGED_MODE}` : ''}`,
+        `${primary} / ${secondary} -- \`${skillbar.template}\` -- ${TEMPLATE}${options.hdIcons ? ` ${REFORGED_MODE}` : ''}`,
         ...(options.mode === 'PvP'
             ? [`This is a ${PLAYER_VS_PLAYER} PvP build.`]
             : []

@@ -35,8 +35,8 @@ export class SkillbarCommand extends Command {
                     ))
                     .addBooleanOption(option => (
                         option
-                            .setName('high-resolution-icons')
-                            .setDescription('Use high resolution icons')
+                            .setName('hd-icons')
+                            .setDescription('Use HD icons')
                     ))
             ))
         );
@@ -46,20 +46,20 @@ export class SkillbarCommand extends Command {
         const rawTemplates = interaction.options.getString('templates', true);
         return this.execute(interaction, rawTemplates, {
             mode: interaction.options.getBoolean('pvp') ? 'PvP' : 'PvE',
-            highResolutionIcons: interaction.options.getBoolean('high-resolution-icons') ?? false,
+            hdIcons: interaction.options.getBoolean('hd-icons') ?? false,
         });
     }
 
     public async messageRun(message: Message, args: Args) {
         return this.execute(message, (await args.repeat('string')).join(' '), {
             mode: args.getFlags('pvp') ? 'PvP' : 'PvE',
-            highResolutionIcons: args.getFlags('high-resolution-icons'),
+            hdIcons: args.getFlags('hd-icons'),
         });
     }
 
     public async execute(origin: CommandOrigin, templates: string, options: {
         mode: GameMode,
-        highResolutionIcons: boolean,
+        hdIcons: boolean,
     }) {
         const isEphemeral = isEphemeralCommand(origin, false);
 
@@ -96,7 +96,7 @@ export class SkillbarCommand extends Command {
                             skillIndex * ICON_SKILL_SIZE + ICON_SKILL_SIZE,
                             skillbarIndex * ICON_SKILL_SIZE,
                             {
-                                highResolution: options.highResolutionIcons,
+                                hdIcons: options.hdIcons,
                             }
                         );
                     }));
