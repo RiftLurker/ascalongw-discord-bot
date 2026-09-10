@@ -7,6 +7,8 @@ import { getSkillIcon, Skill } from '../lib/skills';
 
 const ASSETS = join(__dirname, '../../assets');
 
+const ELITE_BORDER = loadImage(join(ASSETS, 'elite_border.png'));
+
 export function loadImage(path: string) {
     console.log('loading image ' + path);
     if (/\.png$/i.exec(path)) {
@@ -40,19 +42,24 @@ export async function drawSkill(
     skillData: NonNullable<Skill>,
     dx: number,
     dy: number,
-    { hdIcons = false }: {
-  hdIcons?: boolean
-} = { hdIcons: false }) {
+    {
+        hdIcons = false,
+        withBorder = true,
+    }: {
+        hdIcons?: boolean,
+        withBorder?: boolean,
+    } = {
+        hdIcons: false,
+        withBorder: true,
+    }) {
     const icon = getSkillIcon(skillData, { hdIcons });
     if (!icon) {
         return;
     }
     const image = await loadImage(join(ASSETS, 'skills', `${icon}.png`));
+    ctx.drawImage(image, 0, 0, image.width, image.width, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
 
-    if (hdIcons) {
-        ctx.drawImage(image, 0, 0, image.width, image.width, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
-    }
-    else {
-        ctx.drawImage(image, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
+    if (withBorder && skillData.e) {
+        ctx.drawImage(await ELITE_BORDER, dx, dy, ICON_SKILL_SIZE, ICON_SKILL_SIZE);
     }
 }
