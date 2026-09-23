@@ -2,7 +2,7 @@
     "name": "ascalongw-discord-bot",
     "version": "1.2.0",
     "description": "AscalonGW Discord Bot",
-    "main": "dist/src/index.js",
+    "main": "./dist/src/index.js",
     "type": "module",
     "repository": {
         "type": "git",
@@ -16,10 +16,11 @@
     "homepage": "https://github.com/allegrocy/ascalongw-discord-bot#readme",
     "scripts": {
         "lint": " eslint",
-        "build": "tsc -p tsconfig.json && cp -ura assets/* dist/assets",
+        "build": "tsc && cp -pura assets/* dist/assets",
         "dev": "nodemon src/index.ts",
         "dev:debug": "nodemon --inspect src/index.ts",
         "dev:typecheck": "tsc --noEmit -w",
+        "start": "node dist/src/index.js",
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {

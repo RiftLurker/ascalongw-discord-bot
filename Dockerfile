@@ -29,6 +29,7 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/dist ./
 COPY --from=deps /app/node_modules ./node_modules/
+COPY --from=deps /app/package.json ./
 COPY ./assets/ ./assets/
 
 USER node
