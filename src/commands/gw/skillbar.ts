@@ -13,7 +13,7 @@ import {
 } from '../../lib/skills.ts';
 
 import type { CommandOrigin } from '../../helper/commands.ts';
-import { allowsReactions, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import { buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 import {
     DIGITS,
     PLAYER_VS_PLAYER,
@@ -67,7 +67,6 @@ export class SkillbarCommand extends Command {
             try {
                 const payload = await buildPayload(skillbar, {
                     displayedSkillIndex: index - 1,
-                    withInteraction: false,
                     mode,
                     hdIcons,
                 });
@@ -111,7 +110,6 @@ export class SkillbarCommand extends Command {
 
             const payload = await buildPayload(skillbar, {
                 displayedSkillIndex: skillIndex,
-                withInteraction: true,
                 mode: mode,
                 hdIcons,
             });
@@ -244,7 +242,6 @@ export class SkillbarCommand extends Command {
         hdIcons: boolean,
     }) {
         const isEphemeral = isEphemeralCommand(origin, false);
-        const usesReactions = isEphemeral || allowsReactions(origin);
 
         const skillbar = decodeTemplate(template);
         if (!skillbar) {
@@ -255,7 +252,6 @@ export class SkillbarCommand extends Command {
         }
 
         const payload = await buildPayload(skillbar, {
-            withInteraction: !usesReactions,
             mode: options.mode,
             hdIcons: options.hdIcons,
         });
@@ -267,7 +263,6 @@ export class SkillbarCommand extends Command {
 }
 
 async function buildPayload(skillbar: Skillbar, options: {
-    withInteraction: boolean,
     displayedSkillIndex?: number,
     hdIcons?: boolean,
     mode: GameMode,
