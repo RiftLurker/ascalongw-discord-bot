@@ -16,6 +16,8 @@ const SKILL_DIR = path.join(ASSET_DIR, 'skills');
 
 const git = simpleGit();
 
+const { installed: gitInstalled } = await git.version();
+
 export async function syncApplicationEmojis(client: Client<true>) {
     console.log('Synchronizing Application Emojis');
     const existingEmojis = await client.application.emojis.fetch();
@@ -117,11 +119,13 @@ export async function syncApplicationEmojis(client: Client<true>) {
  * This only uses the file system's modified time if the file was not changed in git
  */
 async function getLastChangedDate(file: string) {
-    const gitLog = await git.log({
-        file,
-    });
-    if (gitLog.latest) {
-        return new Date(Date.parse(gitLog.latest.date));
+    if (gitInstalled) {
+        const gitLog = await git.log({
+            file,
+        });
+        if (gitLog.latest) {
+            return new Date(Date.parse(gitLog.latest.date));
+        }
     }
 
     return (await fs.stat(file)).mtime;
