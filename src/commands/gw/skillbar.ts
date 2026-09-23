@@ -1,7 +1,7 @@
 import type { Args } from '@sapphire/framework';
 import { Command } from '@sapphire/framework';
-import type { MessagePayloadOption } from 'discord.js';
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, Message, MessageFlags, SeparatorBuilder, TextDisplayBuilder, bold, heading, inlineCode } from 'discord.js';
+import type { Message, MessagePayloadOption } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, MessageFlags, SeparatorBuilder, TextDisplayBuilder, bold, heading, inlineCode } from 'discord.js';
 import { ICON_SKILL_SIZE, canvasToBuffer, createCanvas, drawSkill } from '../../helper/canvas.ts';
 import type { Attribute, GameMode, Skillbar } from '../../lib/skills.ts';
 import { decodeTemplate, getProfessionColor } from '../../lib/skills.ts';
@@ -259,22 +259,10 @@ export class SkillbarCommand extends Command {
             mode: options.mode,
             hdIcons: options.hdIcons,
         });
-        const response = await origin.reply({
+        await origin.reply({
             ...payload,
             ephemeral: isEphemeral,
         });
-
-        if (usesReactions) {
-            const message = response instanceof Message
-                ? response
-                : !isEphemeral && await response.fetch();
-
-            if (message) {
-                for (let i = 0; i < skillbar.skills.length; i++) {
-                    await message.react(DIGITS[i + 1]);
-                }
-            }
-        }
     }
 }
 
