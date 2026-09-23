@@ -1,7 +1,7 @@
 import type { Args } from '@sapphire/framework';
 import { Command } from '@sapphire/framework';
 import type { MessagePayloadOption } from 'discord.js';
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, Message, MessageFlags, SeparatorBuilder, TextDisplayBuilder, bold, heading, inlineCode } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, Message, MessageFlags, SeparatorBuilder, TextDisplayBuilder, bold, heading, inlineCode } from 'discord.js';
 import { ICON_SKILL_SIZE, canvasToBuffer, createCanvas, drawSkill } from '../../helper/canvas.ts';
 import type { Attribute, GameMode, Skillbar } from '../../lib/skills.ts';
 import { decodeTemplate, getProfessionColor } from '../../lib/skills.ts';
@@ -71,11 +71,13 @@ export class SkillbarCommand extends Command {
                     mode,
                     hdIcons,
                 });
-                await message.edit(payload);
-                // FIXME Permission check
-                if (message.channel.type !== ChannelType.DM) {
-                    await reaction.users.remove(user.id);
-                }
+                await message.edit({
+                    content: null,
+                    ...payload,
+                });
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                await Promise.all(DIGITS.map(async digit => message.reactions.resolve(digit)?.users.remove(client.user!)));
+                await reaction.users.remove(client.user.id);
             }
             catch {
                 // ignore errors
@@ -374,6 +376,7 @@ function buildSkillbarContent(skillbar: Skillbar, options: {
         if (skillId !== 0) {
             button
                 .setCustomId(`skill-${options.mode}:${skillId}:${skillbar.template}`)
+                // TODO Use a fallback emoji for unknown skills instead of failing
                 .setEmoji(getSkillEmoji(skillId).identifier);
         }
         else {
