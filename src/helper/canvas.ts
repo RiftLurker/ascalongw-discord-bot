@@ -1,16 +1,18 @@
+import { container } from '@sapphire/framework';
 import fs from 'fs';
 import streams from 'memory-streams';
 import { join } from 'path';
 import * as pureimage from 'pureimage';
-import { Bitmap } from 'pureimage/dist/bitmap.js';
-import { getSkillIcon, Skill } from '../lib/skills';
+import type { Bitmap } from 'pureimage/dist/bitmap.js';
+import type { Skill } from '../lib/skills.ts';
+import { getSkillIcon } from '../lib/skills.ts';
 
-const ASSETS = join(__dirname, '../../assets');
+const ASSETS = join(import.meta.dirname, '../../assets');
 
 const ELITE_BORDER = loadImage(join(ASSETS, 'elite_border.png'));
 
 export function loadImage(path: string) {
-    console.log('loading image ' + path);
+    container.logger.debug('loading image ' + path);
     if (/\.png$/i.exec(path)) {
         return pureimage.decodePNGFromStream(fs.createReadStream(path));
     }

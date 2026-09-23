@@ -7,16 +7,16 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const MILLISECONDS_PER_WEEK = MILLISECONDS_PER_DAY * 7;
 
 import { addMilliseconds, intervalToDuration } from 'date-fns';
-import nicholasSandford from '../../assets/activities/nicholas-sandford.json';
-import nicholasTheTraveler from '../../assets/activities/nicholas-the-traveler.json';
-import pveBonus from '../../assets/activities/pve-bonus.json';
-import pvpBonus from '../../assets/activities/pvp-bonus.json';
-import vanguard from '../../assets/activities/vanguard.json';
-import wanted from '../../assets/activities/wanted.json';
-import zaishenBounty from '../../assets/activities/zaishen-bounty.json';
-import zaishenCombat from '../../assets/activities/zaishen-combat.json';
-import zaishenMission from '../../assets/activities/zaishen-mission.json';
-import zaishenVanquish from '../../assets/activities/zaishen-vanquish.json';
+import nicholasSandford from '../../assets/activities/nicholas-sandford.json' with { type: 'json' };
+import nicholasTheTraveler from '../../assets/activities/nicholas-the-traveler.json' with { type: 'json' };
+import pveBonus from '../../assets/activities/pve-bonus.json' with { type: 'json' };
+import pvpBonus from '../../assets/activities/pvp-bonus.json' with { type: 'json' };
+import vanguard from '../../assets/activities/vanguard.json' with { type: 'json' };
+import wanted from '../../assets/activities/wanted.json' with { type: 'json' };
+import zaishenBounty from '../../assets/activities/zaishen-bounty.json' with { type: 'json' };
+import zaishenCombat from '../../assets/activities/zaishen-combat.json' with { type: 'json' };
+import zaishenMission from '../../assets/activities/zaishen-mission.json' with { type: 'json' };
+import zaishenVanquish from '../../assets/activities/zaishen-vanquish.json' with { type: 'json' };
 
 export const ACTIVITIES = {
     'nicholas-sandford': {

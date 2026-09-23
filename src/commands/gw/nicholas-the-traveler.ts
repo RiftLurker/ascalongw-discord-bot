@@ -1,10 +1,12 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { isFuture } from 'date-fns';
-import { Message, hideLinkEmbed } from 'discord.js';
-import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
-import { getDiscordTimestamp } from '../../helper/timestamp';
-import { getActivity, getActivityMeta } from '../../lib/activities';
-import { wikiSearchUrl } from './wiki';
+import type { Message } from 'discord.js';
+import { hideLinkEmbed } from 'discord.js';
+import type { CommandOrigin } from '../../helper/commands.ts';
+import { buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import { getDiscordTimestamp } from '../../helper/timestamp.ts';
+import { getActivity, getActivityMeta } from '../../lib/activities.ts';
+import { wikiSearchUrl } from './wiki.ts';
 
 export class ZaishenQuestCommand extends Subcommand {
     public constructor(context: Subcommand.LoaderContext, options: Subcommand.Options) {

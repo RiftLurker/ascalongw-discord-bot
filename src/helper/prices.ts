@@ -1,4 +1,4 @@
-import { GOLD, PLATINUM } from './emoji';
+import { GOLD, PLATINUM } from './emoji.ts';
 
 export function abbreviatePrice(price: number, digits: number) {
     let value = price;

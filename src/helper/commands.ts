@@ -1,6 +1,7 @@
-import { Command } from '@sapphire/framework';
-import { Subcommand } from '@sapphire/plugin-subcommands';
-import { Message, SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import type { Command } from '@sapphire/framework';
+import type { Subcommand } from '@sapphire/plugin-subcommands';
+import type { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+import { ApplicationIntegrationType, GuildChannel, InteractionContextType, Message, PermissionFlagsBits } from 'discord.js';
 
 export type CommandOrigin = Message | Command.ChatInputCommandInteraction
 
@@ -13,11 +14,27 @@ export function isEphemeralCommand(origin: CommandOrigin, defaultValue = true): 
     return !isPublic;
 }
 
+export function allowsReactions(origin: CommandOrigin) {
+    const channel = origin.channel;
+
+    if (channel instanceof GuildChannel) {
+        const me = channel.guild.members.me;
+        if (!me) {
+            return false;
+        }
+        return channel.permissionsFor(me).has(PermissionFlagsBits.AddReactions);
+    }
+
+    return false;
+}
+
 export function buildChatCommand(command: Command, fn?: (builder: SlashCommandBuilder) => unknown) {
     return (builder: SlashCommandBuilder) => {
         builder
             .setName(command.name)
-            .setDescription(command.description);
+            .setDescription(command.description)
+            .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
+            .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall]);
 
         fn?.(builder);
 
@@ -40,7 +57,9 @@ export function buildChatSubCommand(
     return (builder: SlashCommandBuilder) => {
         builder
             .setName(command.name)
-            .setDescription(command.description);
+            .setDescription(command.description)
+            .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
+            .setIntegrationTypes([ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall]);
 
         command.parsedSubcommandMappings.forEach((parsedSubcommand) => {
             const data = subcommandData[parsedSubcommand.name];
@@ -49,7 +68,6 @@ export function buildChatSubCommand(
             }
 
             builder.addSubcommand((subcommand) => {
-
                 subcommand
                     .setName(parsedSubcommand.name)
                     .setDescription(data.description);

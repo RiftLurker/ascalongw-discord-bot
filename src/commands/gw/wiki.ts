@@ -1,7 +1,7 @@
 import { Args, Command } from '@sapphire/framework';
 import axios from 'axios';
 import { Message } from 'discord.js';
-import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
+import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 
 const WIKI_WEBSITE = 'https://wiki.guildwars.com';
 

@@ -1,12 +1,16 @@
-import { Args, Command } from '@sapphire/framework';
-import { AttachmentBuilder, Message } from 'discord.js';
+import type { Args } from '@sapphire/framework';
+import { Command } from '@sapphire/framework';
+import type { Message } from 'discord.js';
+import { AttachmentBuilder } from 'discord.js';
 import path from 'node:path';
-import { ICON_SKILL_SIZE, canvasToBuffer, createCanvas, drawSkill, loadImage } from '../../helper/canvas';
-import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
-import { decodePawned } from '../../lib/pawned';
-import { GameMode, Skillbar, decodeTemplate, getProfessionName, getSkill } from '../../lib/skills';
+import { ICON_SKILL_SIZE, canvasToBuffer, createCanvas, drawSkill, loadImage } from '../../helper/canvas.ts';
+import type { CommandOrigin } from '../../helper/commands.ts';
+import { buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import { decodePawned } from '../../lib/pawned.ts';
+import type { GameMode, Skillbar } from '../../lib/skills.ts';
+import { decodeTemplate, getProfessionName, getSkill } from '../../lib/skills.ts';
 
-const assets = path.join(__dirname, '../../../assets');
+const assets = path.join(import.meta.dirname, '../../../assets');
 
 export class SkillbarCommand extends Command {
     public constructor(context: Command.LoaderContext, options: Command.Options) {

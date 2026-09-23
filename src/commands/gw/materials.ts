@@ -1,10 +1,14 @@
 import { Command } from '@sapphire/framework';
 import axios from 'axios';
-import { EmbedBuilder, Message, formatEmoji } from 'discord.js';
-import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
-import { emojiPrice } from '../../helper/prices';
-import { isNonNullable } from '../../helper/types';
-import { Material, getMaterials } from '../../lib/materials';
+import type { Message } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
+import type { CommandOrigin } from '../../helper/commands.ts';
+import { buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import { getEmojiByName } from '../../helper/emoji.ts';
+import { emojiPrice } from '../../helper/prices.ts';
+import { isNonNullable } from '../../helper/types.ts';
+import type { Material } from '../../lib/materials.ts';
+import { getMaterials } from '../../lib/materials.ts';
 
 const TRADE_WEBSITE = 'https://kamadan.gwtoolbox.com';
 
@@ -14,7 +18,9 @@ interface TraderQuote {
 }
 
 interface TraderQuotes {
-    buy: Record<string, TraderQuote>;
+    buy: Record<string, TraderQuote | undefined>;
+    sell: Record<string, TraderQuote | undefined>;
+    updated_at: number;
 }
 
 export class MaterialsCommand extends Command {
@@ -52,37 +58,36 @@ export class MaterialsCommand extends Command {
 
         const response = await axios.get<TraderQuotes>(`${TRADE_WEBSITE}/trader_quotes`);
 
-        if (response.status !== 200 || !response.data) {
+        if (response.status !== 200) {
             return message.edit(`Sorry, something went wrong fetching results from ${TRADE_WEBSITE}.`);
         }
 
         const json = response.data;
 
         function formatMaterial(material: Material) {
-            const data = json.buy[material.id];
-            if (!data) {
-                return;
-            }
+            const data = json.buy[`0b${material.id.toString(16).padStart(4, '0')}`];
             return {
-                name: `${formatEmoji(material.emoji)} ${material.name}`,
-                value: ` ${emojiPrice(data.p)}`,
+                name: `${getEmojiByName(material.name)} ${material.name}`,
+                value: data ? `${emojiPrice(data.p)}` : 'Unknown',
                 inline: true,
             };
         }
 
         return message.edit({
-            content: `Latest trader prices from ${TRADE_WEBSITE}`,
+            content: `Latest trader prices from <${TRADE_WEBSITE}>`,
             embeds: [
                 new EmbedBuilder()
                     .setTitle('Common Materials')
                     .addFields(
                         getMaterials('common').map(formatMaterial).filter(isNonNullable),
-                    ),
+                    )
+                    .setTimestamp(json.updated_at * 1000),
                 new EmbedBuilder()
                     .setTitle('Rare Materials')
                     .addFields(
                         getMaterials('rare').map(formatMaterial).filter(isNonNullable),
-                    ),
+                    )
+                    .setTimestamp(json.updated_at * 1000),
             ],
         });
     }

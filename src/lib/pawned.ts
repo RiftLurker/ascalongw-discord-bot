@@ -10,7 +10,7 @@
  * Guild Wars skill-template string.
  */
 
-import { decodeTemplate, Skillbar } from './skills';
+import { decodeTemplate, Skillbar } from './skills.ts';
 
 const PAWNED_ALPHABET =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';

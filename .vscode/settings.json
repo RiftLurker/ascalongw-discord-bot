@@ -1,0 +1,11 @@
+{
+    "powershell.codeFormatting.avoidSemicolonsAsLineTerminators": true,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "git.ignoreLimitWarning": true,
+    "[javascript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    }
+}

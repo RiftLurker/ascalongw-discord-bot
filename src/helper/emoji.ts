@@ -1,4 +1,7 @@
-import { Profession } from '../../src/lib/skills';
+import type { Emoji } from 'discord.js';
+import { getSkill, Profession } from '../../src/lib/skills.ts';
+import { client } from '../index.ts';
+import { sanitizeNameForEmoji } from '../lib/emoji.ts';
 
 export const DIGITS = [
     '\u0030\u20E3',
@@ -13,42 +16,119 @@ export const DIGITS = [
     '\u0039\u20E3',
 ];
 
-export const PROFESSION: Map<Profession, string> = new Map([
-    [Profession.None, '<:none:1296734618967478272>'],
-    [Profession.Warrior, '<:warrior:1296745564062486609>'],
-    [Profession.Ranger, '<:ranger:1296745544143601694>'],
-    [Profession.Monk, '<:monk:1296745514385014814>'],
-    [Profession.Necromancer, '<:necromancer:1296745521662267453>'],
-    [Profession.Mesmer, '<:mesmer:1296745507431120966>'],
-    [Profession.Elementalist, '<:elementalist:1296745497566121984>'],
-    [Profession.Assassin, '<:assassin:1296745487528886273>'],
-    [Profession.Ritualist, '<:ritualist:1296745556470792232>'],
-    [Profession.Paragon, '<:paragon:1296745535641882644>'],
-    [Profession.Dervish, '<:dervish:1296745474530738196>'],
-]);
-
-export const TEMPLATE = '<:template:1296734678526591040>';
-export const ADRENALINE = '<:adrenaline:1296734525904130141>';
-export const ENERGY = '<:energy:1296734585043947591>';
-export const SACRIFICE = '<:sacrifice:1296734669517357136>';
-export const ACTIVATION = '<:activation:1296734509898797097>';
-export const RECHARGE = '<:recharge:1296734651309621288>';
-export const OVERCAST = '<:overcast:1296734626412494932>';
-export const UPKEEP = '<:upkeep:1296734686936170536>';
-
-export const GOLD = '<:gold:1296735825911877692>';
-export const PLATINUM = '<:platinum:1296735847814660178>';
-
-export const GIFT_OF_THE_HUNTSMAN = '<:gift_of_the_huntsman:1296736654551154732>';
-
-export const ZAISHEN_COPPER_COIN = '<:zaishen_copper_coin:1296734704204251137>';
-
-export const VANGUARD_INITIATE = '<:vanguard_initiate:1296736832058556448>';
-
 export const EDIT = '\uD83D\uDCDD';
 
-export const REFORGED_MODE = '<:ReforgedMode:1542468851705315358>';
-export const MELANDRUS_ACCORD = '<:MelandrusAccord:1542468850073866241>';
-export const DHUUM_COVENANT = '<:DhuumCovenant:1542468848748601414>';
+let emojiLookupByName = await createEmojiLookup();
 
-export const PLAYER_VS_PLAYER = '<:PvP:1542474583276519480>';
+async function createEmojiLookup() {
+    if (!client.application) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        client.once('clientReady', refetchEmojis);
+        return new Map<string, Emoji>();
+    }
+    const emojis = await client.application.emojis.fetch();
+
+    return new Map<string, Emoji>(emojis.map((emoji) => [emoji.name, emoji]));
+}
+
+export async function refetchEmojis() {
+    emojiLookupByName = await createEmojiLookup();
+}
+
+export function getEmojiByName(name: string) {
+    let emoji = emojiLookupByName.get(name);
+    if (!emoji) {
+        emoji = emojiLookupByName.get(sanitizeNameForEmoji(name));
+        if (!emoji) {
+            throw new Error(`Cannot find emoji ${name}`);
+        }
+    }
+    return emoji;
+}
+
+export function getSkillEmoji(id: number) {
+    const skill = getSkill(id, {
+        mode: 'PvE',
+    });
+
+    if (!skill) {
+        throw new Error(`Cannot find skill ${id}`);
+    }
+
+    return getEmojiByName(sanitizeNameForEmoji(skill.n));
+}
+
+// TODO init all of these after syncApplicationEmojis
+
+export function getProfessionEmoji(profession: Profession) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return PROFESSION.get(profession)!;
+}
+
+const PROFESSION = new Map<Profession, Emoji>([
+    [Profession.None, lazyEmoji('None')],
+    [Profession.Warrior, lazyEmoji('Warrior')],
+    [Profession.Ranger, lazyEmoji('Ranger')],
+    [Profession.Monk, lazyEmoji('Monk')],
+    [Profession.Necromancer, lazyEmoji('Necromancer')],
+    [Profession.Mesmer, lazyEmoji('Mesmer')],
+    [Profession.Elementalist, lazyEmoji('Elementalist')],
+    [Profession.Assassin, lazyEmoji('Assassin')],
+    [Profession.Ritualist, lazyEmoji('Ritualist')],
+    [Profession.Paragon, lazyEmoji('Paragon')],
+    [Profession.Dervish, lazyEmoji('Dervish')],
+]);
+
+export const TEMPLATE = lazyEmoji('template');
+export const ADRENALINE = lazyEmoji('adrenaline');
+export const ENERGY = lazyEmoji('energy');
+export const SACRIFICE = lazyEmoji('sacrifice');
+export const ACTIVATION = lazyEmoji('activation');
+export const RECHARGE = lazyEmoji('recharge');
+export const OVERCAST = lazyEmoji('overcast');
+export const UPKEEP = lazyEmoji('upkeep');
+
+export const GOLD = lazyEmoji('gold');
+export const PLATINUM = lazyEmoji('platinum');
+
+export const GIFT_OF_THE_HUNTSMAN = lazyEmoji('Gift_of_the_Huntsman');
+
+export const ZAISHEN_COPPER_COIN = lazyEmoji('Zaishen_Copper_Coin');
+
+export const VANGUARD_INITIATE = lazyEmoji('Vanguard_Initiate');
+
+export const REFORGED_MODE = lazyEmoji('Reforged_Mode');
+export const MELANDRUS_ACCORD = lazyEmoji('Melandrus_Accord');
+export const DHUUM_COVENANT = lazyEmoji('Dhuums_Covenant');
+
+export const PLAYER_VS_PLAYER = lazyEmoji('PvP');
+
+function lazyEmoji(name: string): Emoji {
+    let target: Emoji | undefined;
+
+    const getTarget = () => {
+        return target ??= getEmojiByName(name);
+    };
+
+    return new Proxy({} as Emoji, {
+        get(_target, property, receiver) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return Reflect.get(getTarget(), property, receiver);
+        },
+        set(_target, property, value, receiver) {
+            return Reflect.set(getTarget(), property, value, receiver);
+        },
+        has(_target, property) {
+            return property in getTarget();
+        },
+        ownKeys() {
+            return Reflect.ownKeys(getTarget());
+        },
+        getOwnPropertyDescriptor(_target, property) {
+            return Reflect.getOwnPropertyDescriptor(getTarget(), property);
+        },
+        getPrototypeOf(_target) {
+            return Reflect.getPrototypeOf(getTarget());
+        }
+    });
+}

@@ -1,22 +1,20 @@
-import materials from '../../assets/materials.json';
+import materials from '../../assets/materials.json' with { type: 'json' };
 
 export interface Material {
     id: number;
     name: string;
-    icon: string;
     per?: 10;
     aliases?: string[];
     type: 'rare' | 'common';
-    emoji: string;
     order: number;
 }
 
-const idRegistry: Map<number, Material> = new Map();
-const nameRegistry: Map<string, Material> = new Map();
-const traderRegistry: Map<Material['type'], Material[]> = new Map();
+const idRegistry = new Map<number, Material>();
+const nameRegistry = new Map<string, Material>();
+const traderRegistry = new Map<Material['type'], Material[]>();
 
 materials.forEach(material => {
-    idRegistry.set(material.id as unknown as number, material);
+    idRegistry.set(material.id, material);
     nameRegistry.set(material.name.toLowerCase(), material);
     material.aliases?.forEach(alias => nameRegistry.set(alias.toLowerCase(), material));
     traderRegistry.set(material.type, [...(traderRegistry.get(material.type) ?? []), material]);
@@ -28,13 +26,13 @@ for (const [type, mats] of traderRegistry.entries()) {
 
 export function getMaterial(identifier: string | number | ((material: Material) => boolean)): Material | null {
     if (typeof identifier === 'string') {
-        return nameRegistry.get(identifier.toLowerCase()) as Material;
+        return nameRegistry.get(identifier.toLowerCase())!;
     }
     else if (typeof identifier === 'number') {
-        return idRegistry.get(identifier) as Material;
+        return idRegistry.get(identifier)!;
     }
     else if (typeof identifier === 'function') {
-        return materials.find(identifier) as Material;
+        return materials.find(identifier)!;
     }
     return null;
 }

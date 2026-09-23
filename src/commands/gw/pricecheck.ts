@@ -2,7 +2,7 @@ import { Args, Command } from '@sapphire/framework';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { Message, codeBlock } from 'discord.js';
-import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
+import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 
 const TRADE_WEBSITE = 'https://kamadan.gwtoolbox.com';
 

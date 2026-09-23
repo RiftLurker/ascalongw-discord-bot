@@ -110,8 +110,6 @@ config.json
 # Other bits
 .vagrant/
 ssh/
-package-lock.json
-server_config.json
 node_modules.tar.gz
 .env.rb
 .idea/

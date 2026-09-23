@@ -1,11 +1,14 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { isFuture } from 'date-fns';
-import { EmbedBuilder, Message } from 'discord.js';
-import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands';
-import { GIFT_OF_THE_HUNTSMAN, VANGUARD_INITIATE } from '../../helper/emoji';
-import { getDiscordTimestamp } from '../../helper/timestamp';
-import { isNonNullable } from '../../helper/types';
-import { ACTIVITIES, getActivity, getActivityMeta } from '../../lib/activities';
+import type { Message } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
+import type { CommandOrigin } from '../../helper/commands.ts';
+import { buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import { GIFT_OF_THE_HUNTSMAN, VANGUARD_INITIATE } from '../../helper/emoji.ts';
+import { getDiscordTimestamp } from '../../helper/timestamp.ts';
+import { isNonNullable } from '../../helper/types.ts';
+import type { ACTIVITIES } from '../../lib/activities.ts';
+import { getActivity, getActivityMeta } from '../../lib/activities.ts';
 
 /**
  * A blank field to create spacing between embed fields.
