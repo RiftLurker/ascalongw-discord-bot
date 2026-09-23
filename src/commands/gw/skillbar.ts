@@ -1,40 +1,29 @@
 import type { Args } from '@sapphire/framework';
-import { Command, container } from '@sapphire/framework';
+import { Command } from '@sapphire/framework';
 import type { MessagePayloadOption } from 'discord.js';
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, EmbedBuilder, Message, inlineCode } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, Message, MessageFlags, SeparatorBuilder, TextDisplayBuilder, bold, heading, inlineCode } from 'discord.js';
 import { ICON_SKILL_SIZE, canvasToBuffer, createCanvas, drawSkill } from '../../helper/canvas.ts';
-import type { GameMode, Skillbar } from '../../lib/skills.ts';
+import type { Attribute, GameMode, Skillbar } from '../../lib/skills.ts';
 import { decodeTemplate, getProfessionColor } from '../../lib/skills.ts';
 
-import type {
-    Attribute
-} from '../../lib/skills.ts';
 import {
-    formatDescription,
     getAttributeName,
     getProfessionAbbreviation,
-    getProfessionName, getSkill,
-    getSkillTypeName,
-    getTitleName
+    getSkill
 } from '../../lib/skills.ts';
 
 import type { CommandOrigin } from '../../helper/commands.ts';
 import { allowsReactions, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 import {
-    ACTIVATION,
-    ADRENALINE,
     DIGITS,
-    ENERGY,
-    OVERCAST,
     PLAYER_VS_PLAYER,
-    RECHARGE,
     REFORGED_MODE,
-    SACRIFICE,
-    UPKEEP,
     getEmojiByName,
     getProfessionEmoji,
     getSkillEmoji
 } from '../../helper/emoji.ts';
+import { extractAttachmentIds } from '../../lib/component.ts';
+import { buildPayload as buildSkillPayload } from './skill.ts';
 
 const IMAGE_SIZE = 64;
 
@@ -47,7 +36,7 @@ export class SkillbarCommand extends Command {
             description: 'Previews a skill template.'
         });
 
-        const { client } = container;
+        const { client } = this.container;
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         client.on('messageReactionAdd', async (reaction, user) => {
@@ -128,6 +117,81 @@ export class SkillbarCommand extends Command {
             await interaction.reply({
                 ...payload,
                 ephemeral: true,
+            });
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        client.on('interactionCreate', async (interaction) => {
+            if (!interaction.isButton()) {
+                return;
+            }
+            if (interaction.customId.startsWith('skill-empty')) {
+                await interaction.reply({
+                    content: 'This skill slot is empty',
+                    flags: MessageFlags.Ephemeral,
+                });
+                return;
+            }
+            const match = /^skill-(.*):(.*):(.*)/.exec(interaction.customId);
+            if (!match) {
+                return;
+            }
+            const mode = match[1];
+            if (mode !== 'PvE' && mode !== 'PvP') {
+                return;
+            }
+            const skillId = parseInt(match[2]);
+            const skill = getSkill(skillId, {
+                mode,
+            });
+            if (!skill) {
+                await interaction.reply({
+                    content: `Unable to find skill ${skillId}`,
+                    flags: MessageFlags.Ephemeral,
+                });
+                return;
+            }
+            const skillbar = decodeTemplate(match[3]);
+            if (!skillbar) {
+                return;
+            }
+
+            const payload = await buildSkillPayload(skill, {
+                hdIcons: false,
+                skillbar,
+            });
+
+            const message = interaction.message;
+            const component = message.components[0];
+            const attachmentIds = extractAttachmentIds(component);
+
+            await interaction.update({
+                components: [
+                    component,
+                    new SeparatorBuilder(),
+                    ...payload.components.slice(0, -1),
+                    payload.components.slice(-1)[0].addActionRowComponents(
+                        new ActionRowBuilder<ButtonBuilder>()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId('skillbar-clear')
+                                    .setLabel('Hide skill info')
+                                    .setStyle(ButtonStyle.Danger)))
+                ],
+                attachments: attachmentIds.map((id) => ({ id })),
+                files: payload.files,
+            });
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        client.on('interactionCreate', async (interaction) => {
+            if (!interaction.isButton() || interaction.customId !== 'skillbar-clear') {
+                return;
+            }
+            const message = interaction.message;
+
+            await interaction.update({
+                components: message.components.slice(0, 1),
             });
         });
     }
@@ -222,7 +286,7 @@ async function buildPayload(skillbar: Skillbar, options: {
     const ctx = canvas.getContext('2d');
 
     await Promise.all(
-        skillbar.skills.map((skillId, skillIndex) => {
+        skillbar.skills.map(async (skillId, skillIndex) => {
             const skill = getSkill(skillId, { mode: options.mode });
             if (!skill) {
                 return;
@@ -240,46 +304,22 @@ async function buildPayload(skillbar: Skillbar, options: {
     );
 
     const attachment = new AttachmentBuilder(await canvasToBuffer(canvas), {
-        name: `${skillbar.template}.png`,
+        name: 'skillbar.png',
     });
 
     const content = buildSkillbarContent(skillbar, {
         shownSkillIndex: options.displayedSkillIndex,
         mode: options.mode,
         hdIcons: options.hdIcons,
+        skillbarUrl: `attachment://${attachment.name}`
     });
 
-    function createSkillButton(skillId: number) {
-        const button = new ButtonBuilder()
-            .setStyle(ButtonStyle.Secondary)
-            .setCustomId(`skill-${options.mode}:${skillId}`);
-
-        if (skillId !== 0) {
-            button.setEmoji(getSkillEmoji(skillId).identifier);
-        }
-        else {
-            button.setEmoji(getEmojiByName('empty').identifier);
-        }
-
-        return button;
-    }
-
-    const components = [
-        new ActionRowBuilder<ButtonBuilder>().addComponents(
-            ...skillbar.skills.slice(0, 4).map(createSkillButton),
-        ),
-        new ActionRowBuilder<ButtonBuilder>().addComponents(
-            ...skillbar.skills.slice(4, 8).map(createSkillButton),
-        ),
-    ];
-
-    content.setImage(`attachment://${skillbar.template}.png`);
-
     return {
-        embeds: [content.toJSON()],
-        // content,
+        components: [
+            content,
+        ],
+        flags: MessageFlags.IsComponentsV2,
         files: [attachment],
-        components,
     } satisfies MessagePayloadOption;
 }
 
@@ -287,93 +327,72 @@ function buildSkillbarContent(skillbar: Skillbar, options: {
     shownSkillIndex?: number,
     mode: GameMode
     hdIcons?: boolean,
+    skillbarUrl: string;
 }) {
     const primary = `${getProfessionEmoji(skillbar.primary)} ${getProfessionAbbreviation(skillbar.primary)}`;
     const secondary = `${getProfessionAbbreviation(skillbar.secondary)} ${getProfessionEmoji(skillbar.secondary)}`;
 
-    const embed = new EmbedBuilder()
-        .setTitle(`${primary} / ${secondary}`)
-        .setColor(getProfessionColor(skillbar.primary))
-        .setFields(
-            {
-                name: 'Template',
-                value: skillbar.template
-            },
-            ...(options.mode === 'PvP' ? [
-                {
-                    name: 'PvP',
-                    value: 'Yes',
-                },
-            ] : []),
-            ...Object.entries(skillbar.attributes).map(([attribute, level]) => ({
-                name: getAttributeName(attribute as unknown as Attribute),
-                value: String(level),
-                inline: true,
-            }))
+    const content = new ContainerBuilder()
+        .setAccentColor(parseInt(getProfessionColor(skillbar.primary).substring(1), 16))
+        .addTextDisplayComponents(
+            new TextDisplayBuilder({
+                content: heading(`${primary} / ${secondary}`, 2),
+            }),
+            ...(options.mode === 'PvP'
+                ? [new TextDisplayBuilder({
+                    content: `This build is intended for PvP ${PLAYER_VS_PLAYER}`,
+                })]
+                : []),
+            new TextDisplayBuilder({
+                content: `${bold('Template')}\n${skillbar.template}`,
+            }),
+            ...(Object.entries(skillbar.attributes).length === 0
+                ? []
+                : [new TextDisplayBuilder({
+                    content: Object.entries(skillbar.attributes)
+                        .map(([attributeId, level]) => `${bold(getAttributeName(attributeId as unknown as Attribute))}: ${level}`)
+                        .join('\u2003')
+                })])
+        )
+        .addMediaGalleryComponents(
+            new MediaGalleryBuilder()
+                .addItems(
+                    new MediaGalleryItemBuilder()
+                        .setURL(options.skillbarUrl)
+                )
+        )
+        .addTextDisplayComponents(
+            new TextDisplayBuilder({
+                content: 'Click for skill info'
+            })
         );
 
-    return embed;
+    const skills = skillbar.skills.map((skillId: number, slot: number) => {
+        const button = new ButtonBuilder()
+            .setStyle(ButtonStyle.Secondary);
 
-    // const listAttributes = (attributes: Skillbar['attributes']) => {
-    //     const arr = [];
-    //     for (const attribute in attributes) {
-    //         const attr: Attribute = attribute as unknown as Attribute;
-    //         arr.push(`${getAttributeName(attr)}: **${skillbar.attributes[attr]}**`);
-    //     }
-    //     return arr;
-    // };
+        if (skillId !== 0) {
+            button
+                .setCustomId(`skill-${options.mode}:${skillId}:${skillbar.template}`)
+                .setEmoji(getSkillEmoji(skillId).identifier);
+        }
+        else {
+            button
+                .setCustomId(`skill-empty:${slot}`)
+                .setEmoji(getEmojiByName('empty').identifier);
+        }
 
-    // return [
-    //     `${primary} / ${secondary} -- \`${skillbar.template}\` -- ${TEMPLATE}${options.hdIcons ? ` ${REFORGED_MODE}` : ''}`,
-    //     ...(options.mode === 'PvP'
-    //         ? [`This is a ${PLAYER_VS_PLAYER} PvP build.`]
-    //         : []
-    //     ),
-    //     listAttributes(skillbar.attributes).join(' '),
-    //     ' ',
-    //     ...(options.shownSkillIndex == null
-    //         ? []
-    //         : buildSkillInfoContent(skillbar, options.shownSkillIndex, {
-    //             mode: options.mode,
-    //         })
-    //     )
-    // ].join('\n');
-}
-
-function buildSkillInfoContent(skillbar: Skillbar, skillIndex: number, options: {
-    mode: GameMode
-}) {
-    const skillId = skillbar.skills[skillIndex];
-    const skillData = getSkill(skillId, {
-        mode: options.mode
+        return button;
     });
-    if(!skillData) {
-        return [
-            `Skill ${skillIndex + 1}: _empty_`
-        ];
-    }
 
-    const skillInfo = [];
-    if (skillData.z?.d) skillInfo.push(`-${skillData.z.d} ${UPKEEP}`);
-    if (skillData.z?.a) skillInfo.push(`${skillData.z.a} ${ADRENALINE}`);
-    if (skillData.z?.e) skillInfo.push(`${skillData.z.e} ${ENERGY}`);
-    if (skillData.z?.s) skillInfo.push(`${skillData.z.s} ${SACRIFICE}`);
-    if (skillData.z?.c) skillInfo.push(`${skillData.z.c} ${ACTIVATION}`);
-    if (skillData.z?.r) skillInfo.push(`${skillData.z.r} ${RECHARGE}`);
-    if (skillData.z?.x) skillInfo.push(`${skillData.z.x} ${OVERCAST}`);
-    if (skillData.p && getProfessionName(skillData.p)) skillInfo.push(`Prof: **${getProfessionName(skillData.p)}**`);
-    if (skillData.a && getAttributeName(skillData.a)) skillInfo.push(`Attrb: **${getAttributeName(skillData.a)}**`);
-    if (skillData.tt && getTitleName(skillData.tt)) skillInfo.push(`Title: **${getTitleName(skillData.tt)}**`);
-    if (skillData.t && getSkillTypeName(skillData)) skillInfo.push(`Type: **${getSkillTypeName(skillData)}**`);
+    content.addActionRowComponents(
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+            ...skills.slice(0, 4),
+        ),
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+            ...skills.slice(4, 8),
+        ),
+    );
 
-    const skillDescription = [
-        `Skill ${skillIndex + 1}: **${skillData.n}** -- [Guild Wars Wiki](<https://wiki.guildwars.com/wiki/Game_link:skill_${skillData.id}>)`,
-        `> ${getSkillTypeName(skillData)}. ${formatDescription(skillData, skillbar)}`
-    ];
-
-    return [
-        ...skillDescription,
-        '',
-        skillInfo.join(' ')
-    ];
+    return content;
 }

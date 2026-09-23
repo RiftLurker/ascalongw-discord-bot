@@ -1,13 +1,11 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { isFuture } from 'date-fns';
 import type { Message } from 'discord.js';
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, time, TimestampStyles } from 'discord.js';
 import type { CommandOrigin } from '../../helper/commands.ts';
 import { buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 import { GIFT_OF_THE_HUNTSMAN, VANGUARD_INITIATE } from '../../helper/emoji.ts';
-import { getDiscordTimestamp } from '../../helper/timestamp.ts';
 import { isNonNullable } from '../../helper/types.ts';
-import type { ACTIVITIES } from '../../lib/activities.ts';
 import { getActivity, getActivityMeta } from '../../lib/activities.ts';
 
 /**
@@ -94,7 +92,7 @@ export class PreSearingCommand extends Subcommand {
     }
 }
 
-function createActivityField(name: string, type: keyof typeof ACTIVITIES, date: Date, activityOffset: number) {
+function createActivityField(name: string, type: 'vanguard' | 'nicholas-sandford', date: Date, activityOffset: number) {
     const activityMeta = getActivityMeta(type, date, activityOffset);
 
     return {
@@ -102,9 +100,9 @@ function createActivityField(name: string, type: keyof typeof ACTIVITIES, date: 
         value: [
             getActivity(type, date, activityOffset),
             isFuture(activityMeta.startDate)
-                ? `Starts ${getDiscordTimestamp(activityMeta.startDate, 'R')}`
+                ? `Starts ${time(activityMeta.startDate, TimestampStyles.RelativeTime)}`
                 : isFuture(activityMeta.endDate)
-                    ? `Ends ${getDiscordTimestamp(activityMeta.endDate, 'R')}`
+                    ? `Ends ${time(activityMeta.endDate, TimestampStyles.RelativeTime)}`
                     : null,
         ].filter(isNonNullable).join('\n'),
         inline: true,

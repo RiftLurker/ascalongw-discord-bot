@@ -1,8 +1,10 @@
-import type { ColorResolvable } from 'discord.js';
+import type { HexColorString } from 'discord.js';
 import { bold, italic, underline } from 'discord.js';
+import Fuse from 'fuse.js';
 import skills from '../../assets/skills.json' with { type: 'json' };
+import { isNonNullable } from '../helper/types.ts';
 
-export type Skill = typeof skills extends Record<string, infer T> ? T: unknown;
+export type Skill = typeof skills extends Record<string, infer T> ? NonNullable<T>: unknown;
 
 type SkillValueShortHand = keyof NonNullable<Skill['v']>;
 
@@ -123,6 +125,49 @@ export const TEMPLATE_LOADABLE_SKILLS = [
     3468, 3469, 3470, 3471, 3472, 3473,
 ];
 
+
+const fuse = new Fuse(
+    Object.values(skills)
+        .filter(isNonNullable)
+        .filter(({ id }) => TEMPLATE_LOADABLE_SKILLS.includes(id))
+        .filter(skill => {
+            // No PvP skills
+            if (skill.z?.sp && skill.z.sp & 0x400000) {
+                return false;
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            return a.n.localeCompare(b.n);
+        }),
+    {
+        keys: ['n'],
+        threshold: 0.3,
+    });
+
+export function searchSkills(name: string): Skill[] {
+    const foundSkills = name.length === 0
+        ? fuse._docs.slice(0, 25)
+        : fuse.search(name, {
+            limit: 25,
+        }).map(({ item }) => item);
+    return foundSkills
+        .map(skill => getSkill(skill.id))
+        .filter(isNonNullable);
+}
+
+export function getSkillByName(name: string, options: {
+  mode: GameMode
+} = {
+    mode: 'PvE',
+}): Skill | null {
+    const results = searchSkills(name);
+    if (results.length === 0) {
+        return null;
+    }
+    return getSkill(results[0].id, options);
+}
+
 export function getSkill(skillId: number, {
     mode = 'PvE'
 }: {
@@ -192,7 +237,7 @@ export function getSkillTypeName(
             case 2:
                 return 'Bow Attack';
             case 8:
-                switch (skillData.z?.co) {
+                switch (skillData.z.co) {
                 case 1:
                     return 'Lead Attack';
                 case 2:
@@ -337,7 +382,7 @@ export function getProfessionName<T extends keyof typeof PROFESSION_NAME>(
     return PROFESSION_NAME[profession];
 }
 
-const PROFESSION_COLOR: Record<Profession, ColorResolvable> = {
+const PROFESSION_COLOR: Record<Profession, HexColorString> = {
     [Profession.None]: '#666666',
     [Profession.Warrior]: '#EEAA33',
     [Profession.Ranger]: '#55AA00',
@@ -489,7 +534,8 @@ export function decodeTemplate(template: string): Skillbar | null {
     const attributes: Partial<Record<Attribute, number>> = {};
 
     for (let i = 0; i < attributeCount; i++) {
-        attributes[read(attributeBitLength)] = read(4);
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        attributes[read(attributeBitLength) as Attribute] = read(4);
     }
 
     const skillBitLength = read(4) + 8;
@@ -582,7 +628,7 @@ function strrev(s: string) {
 function charindex(c: string) {
     const n = _base64.length;
     for (let i = 0; i < n; i++) if (_base64.substr(i, 1) == c) return i;
-    throw Error;
+    throw new Error();
 }
 
 function codetobin(template: string) {

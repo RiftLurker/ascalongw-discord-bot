@@ -1,6 +1,6 @@
 import type { Attribute, Profession, Title } from '../src/lib/skills.ts';
 
-type Skill = {
+interface Skill {
     id: number,
     alt?: number,
     n: string;
@@ -32,11 +32,11 @@ type Skill = {
         q?: number;
     };
     v?: Partial<Record<'s' | 'b' | 'd', [number, number]>>;
-};
+}
 
 declare const data: Record<
     `${number}`,
-    Skill
+    Skill | undefined,
 >;
 
 // @ts-expect-error this fixes some weird .d.json.ts behaviour in ESM https://github.com/microsoft/TypeScript/issues/57229#issuecomment-2287172912

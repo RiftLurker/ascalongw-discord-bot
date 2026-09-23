@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { simpleGit } from 'simple-git';
 import skills from '../assets/skills.json' with { type: 'json' };
+import { isNonNullable } from './helper/types.ts';
 import { sanitizeNameForEmoji } from './lib/emoji.ts';
 import { getSkill, TEMPLATE_LOADABLE_SKILLS } from './lib/skills.ts';
 
@@ -56,10 +57,10 @@ export async function syncApplicationEmojis(client: Client<true>) {
         });
     }
 
-    const emojiFiles = await glob('**/*.{jpeg,png,gif,webp,avif}', {
+    const emojiFiles = await glob('**/*.{jpg,jpeg,png,gif,webp,avif}', {
         cwd: EMOJI_DIR
     });
-    const professionFiles = await glob('**/*.{jpeg,png,gif,webp,avif}', {
+    const professionFiles = await glob('**/*.{jpg,jpeg,png,gif,webp,avif}', {
         cwd: PROFESSION_DIR
     });
 
@@ -69,32 +70,35 @@ export async function syncApplicationEmojis(client: Client<true>) {
     ]);
 
     const uploadedFileIds = new Map<number, string>();
-    await Promise.all(Object.values(skills).map(async skillData => {
-        if (!TEMPLATE_LOADABLE_SKILLS.includes(skillData.id)) {
-            return;
-        }
-        const skill = getSkill(skillData.id, {
-            // force PvE for the clean name and to prevent duplicates
-            mode: 'PvE',
-        });
-        if (!skill) {
-            return;
-        }
-        const fileId = skill.i.d;
-        if (!fileId) {
-            return;
-        }
-        if (uploadedFileIds.has(fileId)) {
-            console.warn('File', fileId, 'has already been uploaded as ', uploadedFileIds.get(fileId));
-            return;
-        }
+    await Promise.all(
+        Object.values(skills)
+            .filter(isNonNullable)
+            .map(async skillData => {
+                if (!TEMPLATE_LOADABLE_SKILLS.includes(skillData.id)) {
+                    return;
+                }
+                const skill = getSkill(skillData.id, {
+                    // force PvE for the clean name and to prevent duplicates
+                    mode: 'PvE',
+                });
+                if (!skill) {
+                    return;
+                }
+                const fileId = skill.i.d;
+                if (!fileId) {
+                    return;
+                }
+                if (uploadedFileIds.has(fileId)) {
+                    console.warn('File', fileId, 'has already been uploaded as ', uploadedFileIds.get(fileId));
+                    return;
+                }
 
-        const name = sanitizeNameForEmoji(skill.n);
-        await handleEmojiFile(`${fileId}.png`, SKILL_DIR, {
-            emojiName: name,
-        });
-        uploadedFileIds.set(fileId, name);
-    }));
+                const name = sanitizeNameForEmoji(skill.n);
+                await handleEmojiFile(`${fileId}.png`, SKILL_DIR, {
+                    emojiName: name,
+                });
+                uploadedFileIds.set(fileId, name);
+            }));
 
     for (const uncheckedEmojiId of uncheckedEmojiIds) {
         const emoji = existingEmojis.get(uncheckedEmojiId);

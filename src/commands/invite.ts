@@ -1,6 +1,8 @@
 import { Command, container } from '@sapphire/framework';
-import { Message, OAuth2Scopes, PermissionFlagsBits } from 'discord.js';
-import { CommandOrigin, buildChatCommand, isEphemeralCommand } from '../helper/commands.ts';
+import type { Message } from 'discord.js';
+import { OAuth2Scopes, PermissionFlagsBits } from 'discord.js';
+import type { CommandOrigin } from '../helper/commands.ts';
+import { buildChatCommand, isEphemeralCommand } from '../helper/commands.ts';
 
 export class TemplateCommand extends Command {
     public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -29,7 +31,7 @@ export class TemplateCommand extends Command {
         const isEphemeral = isEphemeralCommand(origin);
 
         return origin.reply({
-            content: await container.client.generateInvite({
+            content: container.client.generateInvite({
                 scopes: [
                     OAuth2Scopes.Bot,
                 ],
