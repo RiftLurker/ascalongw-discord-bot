@@ -22,7 +22,6 @@ import {
     getProfessionEmoji,
     getSkillEmoji
 } from '../../helper/emoji.ts';
-import { extractAttachmentIds } from '../../lib/component.ts';
 import { buildPayload as buildSkillPayload } from './skill.ts';
 
 const IMAGE_SIZE = 64;
@@ -66,7 +65,6 @@ export class SkillbarCommand extends Command {
 
             try {
                 const payload = await buildPayload(skillbar, {
-                    displayedSkillIndex: index - 1,
                     mode,
                     hdIcons,
                 });
@@ -93,7 +91,6 @@ export class SkillbarCommand extends Command {
                 return;
             }
             const template = match[1];
-            const skillIndex = +interaction.values[0];
 
             const skillbar = decodeTemplate(template);
             if (!skillbar) {
@@ -109,7 +106,6 @@ export class SkillbarCommand extends Command {
             const hdIcons = message.content.includes(REFORGED_MODE.toString());
 
             const payload = await buildPayload(skillbar, {
-                displayedSkillIndex: skillIndex,
                 mode: mode,
                 hdIcons,
             });
@@ -156,21 +152,25 @@ export class SkillbarCommand extends Command {
                 return;
             }
 
-            const payload = await buildSkillPayload(skill, {
+            const payload = await buildPayload(skillbar, {
+                mode,
+            });
+
+            const skillPayload = await buildSkillPayload(skill, {
                 hdIcons: false,
                 skillbar,
             });
 
-            const message = interaction.message;
-            const component = message.components[0];
-            const attachmentIds = extractAttachmentIds(component);
+            // const message = interaction.message;
+            // const component = message.components[0];
+            // const attachmentIds = extractAttachmentIds(component);
 
             await interaction.update({
                 components: [
-                    component,
+                    ...payload.components,
                     new SeparatorBuilder(),
-                    ...payload.components.slice(0, -1),
-                    payload.components.slice(-1)[0].addActionRowComponents(
+                    ...skillPayload.components.slice(0, -1),
+                    skillPayload.components.slice(-1)[0].addActionRowComponents(
                         new ActionRowBuilder<ButtonBuilder>()
                             .addComponents(
                                 new ButtonBuilder()
@@ -178,8 +178,8 @@ export class SkillbarCommand extends Command {
                                     .setLabel('Hide skill info')
                                     .setStyle(ButtonStyle.Danger)))
                 ],
-                attachments: attachmentIds.map((id) => ({ id })),
-                files: payload.files,
+                // attachments: attachmentIds.map((id) => ({ id })),
+                files: [...payload.files, ...skillPayload.files],
             });
         });
 
@@ -263,7 +263,6 @@ export class SkillbarCommand extends Command {
 }
 
 async function buildPayload(skillbar: Skillbar, options: {
-    displayedSkillIndex?: number,
     hdIcons?: boolean,
     mode: GameMode,
 }) {
@@ -293,7 +292,6 @@ async function buildPayload(skillbar: Skillbar, options: {
     });
 
     const content = buildSkillbarContent(skillbar, {
-        shownSkillIndex: options.displayedSkillIndex,
         mode: options.mode,
         hdIcons: options.hdIcons,
         skillbarUrl: `attachment://${attachment.name}`
@@ -309,7 +307,6 @@ async function buildPayload(skillbar: Skillbar, options: {
 }
 
 function buildSkillbarContent(skillbar: Skillbar, options: {
-    shownSkillIndex?: number,
     mode: GameMode
     hdIcons?: boolean,
     skillbarUrl: string;
