@@ -8,8 +8,7 @@ export function sanitizeNameForEmoji(name: string) {
 export function getSkillEmojiName(skill: Skill) {
     let name = skill.n;
 
-    switch (skill.t) {
-    /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+    switch (skill.tt) {
     case Title.KurzickRank:
         name += ' (Kurzick)';
         break;
@@ -17,7 +16,6 @@ export function getSkillEmojiName(skill: Skill) {
         name += ' (Luxon)';
         break;
     }
-    /* eslint-ensable @typescript-eslint/no-unsafe-enum-comparison */
 
     return sanitizeNameForEmoji(name);
 }
