@@ -1,8 +1,7 @@
 import type { Emoji } from 'discord.js';
-import type { Skill } from '../../src/lib/skills.ts';
-import { getSkill, Profession, Title } from '../../src/lib/skills.ts';
+import { getSkill, Profession } from '../../src/lib/skills.ts';
 import { client } from '../index.ts';
-import { sanitizeNameForEmoji } from '../lib/emoji.ts';
+import { getSkillEmojiName, sanitizeNameForEmoji } from '../lib/emoji.ts';
 
 export const DIGITS = [
     '\u0030\u20E3',
@@ -45,23 +44,6 @@ export function getEmojiByName(name: string) {
         }
     }
     return emoji;
-}
-
-export function getSkillEmojiName(skill: Skill) {
-    let name = skill.n;
-
-    /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
-    switch (skill.t) {
-    case Title.KurzickRank:
-        name += ' (Kurzick)';
-        break;
-    case Title.LuxonRank:
-        name += ' (Luxon)';
-        break;
-    }
-    /* eslint-enable @typescript-eslint/no-unsafe-enum-comparison */
-
-    return sanitizeNameForEmoji(name);
 }
 
 export function getSkillEmoji(id: number) {

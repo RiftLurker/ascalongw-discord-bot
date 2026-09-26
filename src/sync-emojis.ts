@@ -5,8 +5,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { simpleGit } from 'simple-git';
 import skills from '../assets/skills.json' with { type: 'json' };
-import { getSkillEmojiName } from './helper/emoji.ts';
 import { isNonNullable } from './helper/types.ts';
+import { getSkillEmojiName } from './lib/emoji.ts';
 import { getSkill, TEMPLATE_LOADABLE_SKILLS } from './lib/skills.ts';
 
 const ASSET_DIR = path.join(import.meta.dirname, '..', 'assets');
