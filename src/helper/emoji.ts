@@ -1,5 +1,6 @@
 import type { Emoji } from 'discord.js';
-import { getSkill, Profession } from '../../src/lib/skills.ts';
+import type { Skill } from '../../src/lib/skills.ts';
+import { getSkill, Profession, Title } from '../../src/lib/skills.ts';
 import { client } from '../index.ts';
 import { sanitizeNameForEmoji } from '../lib/emoji.ts';
 
@@ -46,6 +47,23 @@ export function getEmojiByName(name: string) {
     return emoji;
 }
 
+export function getSkillEmojiName(skill: Skill) {
+    let name = skill.n;
+
+    /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+    switch (skill.t) {
+    case Title.KurzickRank:
+        name += ' (Kurzick)';
+        break;
+    case Title.LuxonRank:
+        name += ' (Luxon)';
+        break;
+    }
+    /* eslint-enable @typescript-eslint/no-unsafe-enum-comparison */
+
+    return sanitizeNameForEmoji(name);
+}
+
 export function getSkillEmoji(id: number) {
     const skill = getSkill(id, {
         mode: 'PvE',
@@ -55,7 +73,7 @@ export function getSkillEmoji(id: number) {
         throw new Error(`Cannot find skill ${id}`);
     }
 
-    return getEmojiByName(sanitizeNameForEmoji(skill.n));
+    return getEmojiByName(getSkillEmojiName(skill));
 }
 
 // TODO init all of these after syncApplicationEmojis
