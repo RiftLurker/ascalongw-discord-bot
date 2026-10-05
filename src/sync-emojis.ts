@@ -44,12 +44,15 @@ export async function syncApplicationEmojis(client: Client<true>) {
             const lastChanged = await getLastChangedDate(emojiPath);
 
             if (isAfter(emoji.createdAt, lastChanged)) {
+                client.logger.trace(`retain emoji '${emoji.name}'`);
                 return;
             }
+            client.logger.info(`update emoji '${emoji.name}'`);
             await client.application.emojis.delete(emoji);
             stats.updated++;
         }
         else {
+            client.logger.info(`create emoji '${emojiName}'`);
             stats.created++;
         }
 
@@ -109,6 +112,7 @@ export async function syncApplicationEmojis(client: Client<true>) {
             continue;
         }
         stats.deleted++;
+        client.logger.info(`delete emoji '${emoji.name}'`);
         await client.application.emojis.delete(emoji);
     }
 
