@@ -35,32 +35,37 @@ export async function syncApplicationEmojis(client: Client<true>) {
         emojiName?: string
     }) {
         const emojiName = options?.emojiName ?? path.parse(file).name;
-        const emojiPath = path.join(cwd, file);
+        try {
+            const emojiPath = path.join(cwd, file);
 
-        const emoji = existingEmojisByName.get(emojiName);
+            const emoji = existingEmojisByName.get(emojiName);
 
-        if (emoji) {
-            uncheckedEmojiIds.delete(emoji.id);
+            if (emoji) {
+                uncheckedEmojiIds.delete(emoji.id);
 
-            const lastChanged = await getLastChangedDate(emojiPath);
+                const lastChanged = await getLastChangedDate(emojiPath);
 
-            if (isAfter(emoji.createdAt, lastChanged)) {
-                client.logger.trace(`retain emoji '${emoji.name}'`);
-                return;
+                if (isAfter(emoji.createdAt, lastChanged)) {
+                    client.logger.trace(`retain emoji '${emoji.name}'`);
+                    return;
+                }
+                client.logger.info(`update emoji '${emoji.name}'`);
+                await client.application.emojis.delete(emoji);
+                stats.updated++;
             }
-            client.logger.info(`update emoji '${emoji.name}'`);
-            await client.application.emojis.delete(emoji);
-            stats.updated++;
-        }
-        else {
-            client.logger.info(`create emoji '${emojiName}'`);
-            stats.created++;
-        }
+            else {
+                client.logger.info(`create emoji '${emojiName}'`);
+                stats.created++;
+            }
 
-        await client.application.emojis.create({
-            name: emojiName,
-            attachment: emojiPath,
-        });
+            await client.application.emojis.create({
+                name: emojiName,
+                attachment: emojiPath,
+            });
+        }
+        catch (err) {
+            client.logger.error(`Failed handling emoji ${emojiName}: ${err instanceof Error ? err.message : String(err)}`);
+        }
     }
 
     const emojiFiles = await glob('**/*.{jpg,jpeg,png,gif,webp,avif}', {
