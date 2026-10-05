@@ -1,4 +1,4 @@
-import { isAfter } from 'date-fns';
+import { isAfter, max } from 'date-fns';
 import type { Client } from 'discord.js';
 import { glob } from 'glob';
 import fs from 'node:fs/promises';
@@ -19,7 +19,7 @@ const git = simpleGit();
 const { installed: gitInstalled } = await git.version();
 
 export async function syncApplicationEmojis(client: Client<true>) {
-    console.log('Synchronizing Application Emojis');
+    client.logger.info('Synchronizing Application Emojis');
     const existingEmojis = await client.application.emojis.fetch();
     const existingEmojisByName = new Map(existingEmojis.map((emoji) => [emoji.name, emoji]));
     const uncheckedEmojiIds = new Set(existingEmojis.map(emoji => emoji.id));
@@ -91,7 +91,7 @@ export async function syncApplicationEmojis(client: Client<true>) {
                     return;
                 }
                 if (uploadedFileIds.has(fileId)) {
-                    console.warn('File', fileId, 'has already been uploaded as ', uploadedFileIds.get(fileId));
+                    client.logger.warn('File', fileId, 'has already been uploaded as ', uploadedFileIds.get(fileId));
                     return;
                 }
 
@@ -112,21 +112,25 @@ export async function syncApplicationEmojis(client: Client<true>) {
         await client.application.emojis.delete(emoji);
     }
 
-    console.log(`Emojis synchronized (${stats.created} created, ${stats.updated} updated, ${stats.deleted} deleted)`);
+    client.logger.info(`Emojis synchronized (${stats.created} created, ${stats.updated} updated, ${stats.deleted} deleted)`);
 }
 
 /**
  * This only uses the file system's modified time if the file was not changed in git
  */
 async function getLastChangedDate(file: string) {
+    const dates: Date[] = [];
+
     if (gitInstalled) {
         const gitLog = await git.log({
             file,
         });
         if (gitLog.latest) {
-            return new Date(Date.parse(gitLog.latest.date));
+            dates.push(new Date(Date.parse(gitLog.latest.date)));
         }
     }
 
-    return (await fs.stat(file)).mtime;
+    dates.push((await fs.stat(file)).mtime);
+
+    return max(dates);
 }
