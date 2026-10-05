@@ -2,6 +2,7 @@ import {
     ApplicationCommandRegistries,
     SapphireClient
 } from '@sapphire/framework';
+import type { ClientOptions } from 'discord.js';
 import { ActivityType, GatewayIntentBits, Partials } from 'discord.js';
 import http from 'node:http';
 
@@ -34,7 +35,7 @@ const clientArgs = {
     loadMessageCommandListeners: true,
     loadDefaultErrorListeners: true,
     baseUserDirectory: import.meta.dirname,
-};
+} satisfies ClientOptions;
 
 export const client = new SapphireClient(clientArgs);
 

@@ -1,4 +1,4 @@
-import { isAfter, max } from 'date-fns';
+import { formatDuration, intervalToDuration, isAfter, max } from 'date-fns';
 import type { Client } from 'discord.js';
 import { glob } from 'glob';
 import fs from 'node:fs/promises';
@@ -20,6 +20,7 @@ const { installed: gitInstalled } = await git.version();
 
 export async function syncApplicationEmojis(client: Client<true>) {
     client.logger.info('Synchronizing Application Emojis');
+    const start = new Date();
     const existingEmojis = await client.application.emojis.fetch();
     const existingEmojisByName = new Map(existingEmojis.map((emoji) => [emoji.name, emoji]));
     const uncheckedEmojiIds = new Set(existingEmojis.map(emoji => emoji.id));
@@ -116,7 +117,11 @@ export async function syncApplicationEmojis(client: Client<true>) {
         await client.application.emojis.delete(emoji);
     }
 
-    client.logger.info(`Emojis synchronized (${stats.created} created, ${stats.updated} updated, ${stats.deleted} deleted)`);
+    const end = new Date();
+    client.logger.info(`Emojis synchronized (${stats.created} created, ${stats.updated} updated, ${stats.deleted} deleted) in ${formatDuration(intervalToDuration({
+        start,
+        end,
+    }))}`);
 }
 
 /**
