@@ -5,8 +5,8 @@
         "name": "adr4xtr",
         "namespace": "default",
         "uid": "1503d2dd-7d34-4640-ae9c-2b93ed8d234e",
-        "resourceVersion": "1791208909473006",
-        "generation": 1,
+        "resourceVersion": "1791210817773015",
+        "generation": 2,
         "creationTimestamp": "2026-10-05T14:01:49Z",
         "labels": {
             "grafana.app/deprecatedInternalID": "3927978308018176"
@@ -16,9 +16,11 @@
             "grafana.app/folder": "ag0bfsx74bbpcf",
             "grafana.app/managedBy": "classic-file-provisioning",
             "grafana.app/managerId": "AscalonGW",
-            "grafana.app/sourceChecksum": "ae3b324ddfe40f4e82279c06f36ed5f2",
+            "grafana.app/sourceChecksum": "8b1e71050201776c11837bc7f8409871",
             "grafana.app/sourcePath": "/var/lib/grafana/dashboards/overview.json",
-            "grafana.app/sourceTimestamp": "1791208871000",
+            "grafana.app/sourceTimestamp": "1791210805000",
+            "grafana.app/updatedBy": "access-policy:service",
+            "grafana.app/updatedTimestamp": "2026-10-05T14:33:37Z",
             "grafana.app/folderTitle": "AscalonGW",
             "grafana.app/folderUrl": "/dashboards/f/ag0bfsx74bbpcf/ascalongw"
         }
@@ -1000,7 +1002,7 @@
                                             "kind": "DataQuery",
                                             "spec": {
                                                 "editorMode": "code",
-                                                "expr": "sum without (guild) (bot_command_count{type=\"slash\"})",
+                                                "expr": "sum (bot_command_count{type=\"slash\"})",
                                                 "instant": false,
                                                 "legendFormat": "Slash",
                                                 "range": true
@@ -1022,7 +1024,7 @@
                                             "kind": "DataQuery",
                                             "spec": {
                                                 "editorMode": "code",
-                                                "expr": "sum without (guild) (bot_command_count{type=\"message\"})",
+                                                "expr": "sum (bot_command_count{type=\"message\"})",
                                                 "instant": false,
                                                 "legendFormat": "Message",
                                                 "range": true
