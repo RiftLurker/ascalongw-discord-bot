@@ -1,6 +1,5 @@
-import type { Emoji } from 'discord.js';
+import type { Client, Emoji } from 'discord.js';
 import { getSkill, Profession } from '../../src/lib/skills.ts';
-import { client } from '../index.ts';
 import { getSkillEmojiName, sanitizeNameForEmoji } from '../lib/emoji.ts';
 
 export const DIGITS = [
@@ -18,21 +17,16 @@ export const DIGITS = [
 
 export const EDIT = '\uD83D\uDCDD';
 
-let emojiLookupByName = await createEmojiLookup();
+let emojiLookupByName = new Map<string, Emoji>();
 
-async function createEmojiLookup() {
-    if (!client.application) {
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        client.once('clientReady', refetchEmojis);
-        return new Map<string, Emoji>();
-    }
+async function createEmojiLookup(client: Client<true>) {
     const emojis = await client.application.emojis.fetch();
 
     return new Map<string, Emoji>(emojis.map((emoji) => [emoji.name, emoji]));
 }
 
-export async function refetchEmojis() {
-    emojiLookupByName = await createEmojiLookup();
+export async function refetchEmojis(client: Client<true>) {
+    emojiLookupByName = await createEmojiLookup(client);
 }
 
 export function getEmojiByName(name: string) {
