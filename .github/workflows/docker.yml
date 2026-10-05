@@ -19,6 +19,10 @@ jobs:
           - run: npm ci --only=dev
           - name: Generate Assets Manifest
             run: npm run gen:manifest
+          - uses: actions/upload-artifact@v7
+            with:
+              path: assets.json
+              archive: false
 
           - name: Docker meta
             id: meta
