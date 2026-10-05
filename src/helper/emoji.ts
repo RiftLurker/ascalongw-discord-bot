@@ -1,3 +1,4 @@
+import { container } from '@sapphire/framework';
 import type { Client, Emoji } from 'discord.js';
 import { getSkill, Profession } from '../../src/lib/skills.ts';
 import { getSkillEmojiName, sanitizeNameForEmoji } from '../lib/emoji.ts';
@@ -34,6 +35,7 @@ export function getEmojiByName(name: string) {
     if (!emoji) {
         emoji = emojiLookupByName.get(sanitizeNameForEmoji(name));
         if (!emoji) {
+            container.client.logger.error(`Cannot find emoji ${name}`);
             throw new Error(`Cannot find emoji ${name}`);
         }
     }

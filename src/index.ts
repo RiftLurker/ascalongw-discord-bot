@@ -1,6 +1,6 @@
 import {
     ApplicationCommandRegistries,
-    SapphireClient,
+    SapphireClient
 } from '@sapphire/framework';
 import { ActivityType, GatewayIntentBits, Partials } from 'discord.js';
 import http from 'node:http';

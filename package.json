@@ -1,6 +1,6 @@
 {
     "name": "ascalongw-discord-bot",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "description": "AscalonGW Discord Bot",
     "main": "./dist/src/index.js",
     "type": "module",

@@ -200,7 +200,7 @@ export class SkillbarCommand extends Command {
             }
             buttonUsage.labels({
                 type: 'skillbar-skill-clear',
-                guild: interaction.guildId ?? 0,
+                guild: interaction.guildId ?? GUILD_NONE,
             }).inc();
             const message = interaction.message;
 

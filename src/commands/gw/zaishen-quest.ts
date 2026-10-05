@@ -1,10 +1,9 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { isFuture } from 'date-fns';
 import type { Message } from 'discord.js';
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, time, TimestampStyles } from 'discord.js';
 import type { CommandOrigin } from '../../helper/commands.ts';
 import { buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
-import { getDiscordTimestamp } from '../../helper/timestamp.ts';
 import type { ACTIVITIES } from '../../lib/activities.ts';
 import { getActivity, getActivityMeta } from '../../lib/activities.ts';
 
@@ -83,10 +82,10 @@ export class ZaishenQuestCommand extends Subcommand {
         const activityMeta = getActivityMeta('zaishen-mission', date, activityOffset);
         const dateInfo = isFuture(activityMeta.startDate)
             ? { name: 'Starts',
-                value: getDiscordTimestamp(activityMeta.startDate, 'R')
+                value: time(activityMeta.startDate, TimestampStyles.RelativeTime)
             }
             : { name: 'Ends',
-                value: getDiscordTimestamp(activityMeta.endDate, 'R')
+                value: time(activityMeta.endDate, TimestampStyles.RelativeTime)
             };
 
         return origin.reply({

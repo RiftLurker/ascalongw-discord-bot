@@ -1,10 +1,9 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { isFuture } from 'date-fns';
 import type { Message } from 'discord.js';
-import { hideLinkEmbed } from 'discord.js';
+import { hideLinkEmbed, time, TimestampStyles } from 'discord.js';
 import type { CommandOrigin } from '../../helper/commands.ts';
 import { buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
-import { getDiscordTimestamp } from '../../helper/timestamp.ts';
 import { getActivity, getActivityMeta } from '../../lib/activities.ts';
 import { wikiSearchUrl } from './wiki.ts';
 
@@ -67,8 +66,8 @@ export class NicholasTheTravelerCommand extends Subcommand {
 
         const activityMeta = getActivityMeta('nicholas-the-traveler', date, activityOffset);
         const [verb, footer] = isFuture(activityMeta.startDate)
-            ? ['will collect', `Starting ${getDiscordTimestamp(activityMeta.startDate, 'R')}!`]
-            : ['is collecting', `Moving away ${getDiscordTimestamp(activityMeta.endDate, 'R')}!`];
+            ? ['will collect', `Starting ${time(activityMeta.startDate, TimestampStyles.RelativeTime)}!`]
+            : ['is collecting', `Moving away ${time(activityMeta.endDate, TimestampStyles.RelativeTime)}!`];
 
         const { region, amount, item, area } = getActivity('nicholas-the-traveler', date, activityOffset);
 
