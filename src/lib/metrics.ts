@@ -20,6 +20,10 @@ export function setupMetrics(client: SapphireClient<true>) {
                     name: guild.name,
                 }, 1);
             }
+            this.set({
+                guild: 'none',
+                name: '~ PRIVATE MESSAGES ~',
+            }, 1);
         },
     });
 

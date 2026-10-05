@@ -21,6 +21,8 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
+    depends_on:
+      - ascalongw
     networks:
       - monitoring
 
