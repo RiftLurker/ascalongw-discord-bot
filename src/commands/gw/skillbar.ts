@@ -22,7 +22,7 @@ import {
     getProfessionEmoji,
     getSkillEmoji
 } from '../../helper/emoji.ts';
-import { buttonUsage } from '../../lib/metrics.ts';
+import { GUILD_NONE, buttonUsage } from '../../lib/metrics.ts';
 import { buildPayload as buildSkillPayload } from './skill.ts';
 
 const IMAGE_SIZE = 64;
@@ -89,7 +89,7 @@ export class SkillbarCommand extends Command {
             }
             buttonUsage.labels({
                 type: 'skillbar-skill-legacy',
-                guild: interaction.guildId ?? undefined,
+                guild: interaction.guildId ?? GUILD_NONE,
             }).inc();
             const match = /^skillbar-(.*)$/.exec(interaction.customId);
             if (!match) {
@@ -159,7 +159,7 @@ export class SkillbarCommand extends Command {
 
             buttonUsage.labels({
                 type: 'skillbar-skill',
-                guild: interaction.guildId ?? undefined,
+                guild: interaction.guildId ?? GUILD_NONE,
             }).inc();
 
             const payload = await buildPayload(skillbar, {
@@ -200,7 +200,7 @@ export class SkillbarCommand extends Command {
             }
             buttonUsage.labels({
                 type: 'skillbar-skill-clear',
-                guild: interaction.guildId ?? undefined,
+                guild: interaction.guildId ?? 0,
             }).inc();
             const message = interaction.message;
 

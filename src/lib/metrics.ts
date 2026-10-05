@@ -4,6 +4,8 @@ import { Subcommand } from '@sapphire/plugin-subcommands';
 
 collectDefaultMetrics();
 
+export const GUILD_NONE = 0;
+
 export function setupMetrics(client: SapphireClient<true>) {
     if (process.env.METRICS_ENABLE !== 'true') {
         return;
@@ -21,8 +23,8 @@ export function setupMetrics(client: SapphireClient<true>) {
                 }, 1);
             }
             this.set({
-                guild: 'none',
-                name: '~ PRIVATE MESSAGES ~',
+                guild: GUILD_NONE,
+                name: '~ USER INSTALLED ~',
             }, 1);
         },
     });
@@ -36,6 +38,12 @@ export function setupMetrics(client: SapphireClient<true>) {
                 this.set({
                     guild: guildId,
                 }, guild.memberCount);
+            }
+
+            if (client.application.approximateUserInstallCount) {
+                this.set({
+                    guild: GUILD_NONE
+                }, client.application.approximateUserInstallCount);
             }
         },
     });
@@ -60,7 +68,7 @@ export function setupMetrics(client: SapphireClient<true>) {
                 type: 'slash',
                 subcommand: interaction.options.getSubcommand(false) ?? '',
                 subcommand_group: interaction.options.getSubcommandGroup(false) ?? '',
-                guild: interaction.guildId ?? 'none',
+                guild: interaction.guildId ?? GUILD_NONE,
             }).inc();
         }
 
@@ -70,7 +78,7 @@ export function setupMetrics(client: SapphireClient<true>) {
                 subcommand: interaction.options.getSubcommand(false) ?? '',
                 subcommand_group: interaction.options.getSubcommandGroup(false) ?? '',
                 option: interaction.options.getFocused(true).name,
-                guild: interaction.guildId ?? 'none',
+                guild: interaction.guildId ?? GUILD_NONE,
             }).inc();
         }
     });
@@ -82,7 +90,7 @@ export function setupMetrics(client: SapphireClient<true>) {
         commandUsage.labels({
             command: command.name,
             type: 'message',
-            guild: message.guildId ?? 'none',
+            guild: message.guildId ?? GUILD_NONE,
         }).inc();
     });
 
@@ -91,7 +99,7 @@ export function setupMetrics(client: SapphireClient<true>) {
             command: payload.command.name,
             type: 'message',
             subcommand: command.name,
-            guild: message.guildId ?? 'none',
+            guild: message.guildId ?? GUILD_NONE,
         }).inc();
     });
 }
