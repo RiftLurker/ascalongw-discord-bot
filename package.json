@@ -20,6 +20,7 @@
         "dev": "nodemon src/index.ts",
         "dev:debug": "nodemon --inspect src/index.ts",
         "dev:typecheck": "tsc --noEmit -w",
+        "gen:manifest": "tsx src/bin/manifest.ts",
         "start": "node dist/src/index.js",
         "typecheck": "tsc --noEmit"
     },

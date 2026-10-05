@@ -31,6 +31,8 @@ COPY --from=builder /app/dist ./
 COPY --from=deps /app/node_modules ./node_modules/
 COPY --from=deps /app/package.json ./
 COPY ./assets/ ./assets/
+# bit of a hack to optionally copy assets.json
+COPY ./assets.json* ./assets.json
 
 USER node
 

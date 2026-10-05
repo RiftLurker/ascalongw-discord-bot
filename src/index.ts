@@ -56,7 +56,13 @@ client.once('clientReady', (c) => {
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 client.once('clientReady', async (c) => {
     await refetchEmojis(c);
-    await syncApplicationEmojis(c);
+    try {
+        await syncApplicationEmojis(c);
+    }
+    catch {
+        client.logger.error('Failed to sync application emojis');
+        process.exit(1);
+    }
     await refetchEmojis(c);
 });
 

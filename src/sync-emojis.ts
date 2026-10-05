@@ -1,29 +1,30 @@
-import { formatDuration, intervalToDuration, isAfter, max } from 'date-fns';
+import { isAfter } from 'date-fns';
 import type { Client } from 'discord.js';
 import { glob } from 'glob';
-import fs from 'node:fs/promises';
 import path from 'node:path';
-import { simpleGit } from 'simple-git';
 import skills from '../assets/skills.json' with { type: 'json' };
+import { ASSET_MANIFEST_PATH, getAssetManifest } from './assets.ts';
 import { isNonNullable } from './helper/types.ts';
 import { getSkillEmojiName } from './lib/emoji.ts';
 import { getSkill, TEMPLATE_LOADABLE_SKILLS } from './lib/skills.ts';
 
-const ASSET_DIR = path.join(import.meta.dirname, '..', 'assets');
+export const ASSET_DIR = path.join(import.meta.dirname, '..', 'assets');
 const EMOJI_DIR = path.join(ASSET_DIR, 'emojis');
 const PROFESSION_DIR = path.join(ASSET_DIR, 'professions');
 const SKILL_DIR = path.join(ASSET_DIR, 'skills');
 
-const git = simpleGit();
-
-const { installed: gitInstalled } = await git.version();
-
 export async function syncApplicationEmojis(client: Client<true>) {
     client.logger.info('Synchronizing Application Emojis');
-    const start = new Date();
     const existingEmojis = await client.application.emojis.fetch();
     const existingEmojisByName = new Map(existingEmojis.map((emoji) => [emoji.name, emoji]));
     const uncheckedEmojiIds = new Set(existingEmojis.map(emoji => emoji.id));
+
+    const assetManifest = await (getAssetManifest(process.env.NODE_ENV === 'production' ? 'manifest' : 'fs')
+        .then(manifest => manifest)
+        .catch(() => {
+            client.logger.warn('Failed to load manifest, falling back to fs');
+            return getAssetManifest('fs');
+        }));
 
     const stats = {
         updated: 0,
@@ -37,13 +38,18 @@ export async function syncApplicationEmojis(client: Client<true>) {
         const emojiName = options?.emojiName ?? path.parse(file).name;
         try {
             const emojiPath = path.join(cwd, file);
+            const manifestFilePath = path.relative(ASSET_MANIFEST_PATH, emojiPath);
 
             const emoji = existingEmojisByName.get(emojiName);
 
             if (emoji) {
                 uncheckedEmojiIds.delete(emoji.id);
 
-                const lastChanged = await getLastChangedDate(emojiPath);
+                if (!(manifestFilePath in assetManifest)) {
+                    throw new Error(`Emoji at ${emojiPath} not found in asset manifest.`);
+                }
+
+                const lastChanged = new Date(assetManifest[manifestFilePath]);
 
                 if (isAfter(emoji.createdAt, lastChanged)) {
                     client.logger.trace(`retain emoji '${emoji.name}'`);
@@ -122,29 +128,5 @@ export async function syncApplicationEmojis(client: Client<true>) {
         await client.application.emojis.delete(emoji);
     }
 
-    const end = new Date();
-    client.logger.info(`Emojis synchronized (${stats.created} created, ${stats.updated} updated, ${stats.deleted} deleted) in ${formatDuration(intervalToDuration({
-        start,
-        end,
-    }))}`);
-}
-
-/**
- * This only uses the file system's modified time if the file was not changed in git
- */
-async function getLastChangedDate(file: string) {
-    const dates: Date[] = [];
-
-    if (gitInstalled) {
-        const gitLog = await git.log({
-            file,
-        });
-        if (gitLog.latest) {
-            dates.push(new Date(Date.parse(gitLog.latest.date)));
-        }
-    }
-
-    dates.push((await fs.stat(file)).mtime);
-
-    return max(dates);
+    client.logger.info(`Emojis synchronized (${stats.created} created, ${stats.updated} updated, ${stats.deleted} deleted)`);
 }

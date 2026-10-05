@@ -13,6 +13,13 @@ jobs:
           - name: Checkout
             uses: actions/checkout@v4
 
+          - name: Setup Node
+            uses: actions/setup-node@v7
+
+          - run: npm ci --only=dev
+          - name: Generate Assets Manifest
+            run: npm run gen:manifest
+
           - name: Docker meta
             id: meta
             uses: docker/metadata-action@v5
