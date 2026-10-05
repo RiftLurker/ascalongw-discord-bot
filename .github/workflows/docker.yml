@@ -39,6 +39,7 @@ jobs:
           - uses: actions/download-artifact@v7
             with:
               name: assets.json
+              path: assets.json
 
           - name: Docker meta
             id: meta
