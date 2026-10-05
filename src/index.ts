@@ -38,7 +38,7 @@ const clientArgs = {
 
 export const client = new SapphireClient(clientArgs);
 
-void client.login(process.env.DISCORD_TOKEN);
+await client.login(process.env.DISCORD_TOKEN);
 
 client.once('clientReady', (c) => {
     c.user.setPresence({

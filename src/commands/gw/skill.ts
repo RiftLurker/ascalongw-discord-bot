@@ -5,7 +5,7 @@ import { AttachmentBuilder, bold, ContainerBuilder, Events, heading, hideLinkEmb
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CommandOrigin } from '../../helper/commands.ts';
-import { buildChatCommand, prefixAliases } from '../../helper/commands.ts';
+import { buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 import { ACTIVATION, ADRENALINE, ENERGY, getProfessionEmoji, OVERCAST, RECHARGE, SACRIFICE, UPKEEP } from '../../helper/emoji.ts';
 import type { Skill, Skillbar } from '../../lib/skills.ts';
 import { formatDescription, getAttributeName, getProfessionColor, getProfessionName, getSkill, getSkillByName, getSkillTypeName, getTitleName, searchSkills, type GameMode } from '../../lib/skills.ts';
@@ -89,6 +89,7 @@ export class SkillCommand extends Command {
             mode: GameMode,
             hdIcons: boolean,
         }) {
+        const isEphemeral = isEphemeralCommand(origin, false);
         const skillId = Number(name);
         const skill = Number.isNaN(skillId)
             ? getSkillByName(name, {
@@ -106,6 +107,7 @@ export class SkillCommand extends Command {
 
         await origin.reply({
             ...payload,
+            ephemeral: isEphemeral,
         });
     }
 }
