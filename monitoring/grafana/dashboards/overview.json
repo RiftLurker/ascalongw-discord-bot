@@ -5,8 +5,8 @@
         "name": "adr4xtr",
         "namespace": "default",
         "uid": "1503d2dd-7d34-4640-ae9c-2b93ed8d234e",
-        "resourceVersion": "1791210817773015",
-        "generation": 2,
+        "resourceVersion": "1791211382637986",
+        "generation": 3,
         "creationTimestamp": "2026-10-05T14:01:49Z",
         "labels": {
             "grafana.app/deprecatedInternalID": "3927978308018176"
@@ -16,11 +16,11 @@
             "grafana.app/folder": "ag0bfsx74bbpcf",
             "grafana.app/managedBy": "classic-file-provisioning",
             "grafana.app/managerId": "AscalonGW",
-            "grafana.app/sourceChecksum": "8b1e71050201776c11837bc7f8409871",
+            "grafana.app/sourceChecksum": "47ea76e90eaa5f0c4e111f3d37a9c7be",
             "grafana.app/sourcePath": "/var/lib/grafana/dashboards/overview.json",
-            "grafana.app/sourceTimestamp": "1791210805000",
+            "grafana.app/sourceTimestamp": "1791211375000",
             "grafana.app/updatedBy": "access-policy:service",
-            "grafana.app/updatedTimestamp": "2026-10-05T14:33:37Z",
+            "grafana.app/updatedTimestamp": "2026-10-05T14:43:02Z",
             "grafana.app/folderTitle": "AscalonGW",
             "grafana.app/folderUrl": "/dashboards/f/ag0bfsx74bbpcf/ascalongw"
         }
@@ -636,7 +636,7 @@
                                 "percentChangeColorMode": "standard",
                                 "reduceOptions": {
                                     "calcs": [
-                                        "lastNotNull"
+                                        "max"
                                     ],
                                     "fields": "",
                                     "values": false
@@ -925,7 +925,7 @@
                                             },
                                             "version": "v0"
                                         },
-                                        "refId": "Message Commands"
+                                        "refId": "A"
                                     }
                                 }
                             ],
@@ -966,7 +966,7 @@
                                 "pieType": "pie",
                                 "reduceOptions": {
                                     "calcs": [
-                                        "lastNotNull"
+                                        "max"
                                     ],
                                     "fields": "",
                                     "values": false
@@ -1072,7 +1072,7 @@
                                 "pieType": "pie",
                                 "reduceOptions": {
                                     "calcs": [
-                                        "lastNotNull"
+                                        "max"
                                     ],
                                     "fields": "",
                                     "values": false

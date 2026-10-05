@@ -7,7 +7,7 @@ services:
       DISCORD_TOKEN: ${DISCORD_TOKEN}
       METRICS_ENABLE: ${METRICS_ENABLE:-true}
     healthcheck:
-      test: curl --fail http://localhost:80 || exit 1
+      test: wget -qO- http://127.0.0.1:80 >/dev/null 2>&1 || exit 1
       interval: 60s
       retries: 5
       start_period: 30s
