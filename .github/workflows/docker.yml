@@ -24,7 +24,7 @@ jobs:
 
           - uses: actions/upload-artifact@v7
             with:
-              name: assets manifest
+              name: assets.json
               path: assets.json
               archive: false
 
@@ -38,7 +38,7 @@ jobs:
 
           - uses: actions/download-artifact@v7
             with:
-              name: assets manifest
+              name: assets.json
 
           - name: Docker meta
             id: meta
