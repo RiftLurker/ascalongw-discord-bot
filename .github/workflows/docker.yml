@@ -38,6 +38,7 @@ jobs:
           - uses: actions/download-artifact@v8
             with:
               name: assets.json
+              path: .
 
           - name: Docker meta
             id: meta
@@ -67,14 +68,10 @@ jobs:
               username: ${{github.actor}}
               password: ${{secrets.GITHUB_TOKEN}}
 
-          - uses: actions/upload-artifact@v7
-            with:
-              name: assets-debug
-              path: assets.json
-
           - name: Build and push
             uses: docker/build-push-action@v7
             with:
+                context: .
                 push: ${{ github.event_name != 'pull_request' }}
                 tags: ${{ steps.meta.outputs.tags }}
                 labels: ${{ steps.meta.outputs.labels }}
