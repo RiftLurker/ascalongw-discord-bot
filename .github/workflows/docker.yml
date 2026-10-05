@@ -11,7 +11,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - name: Checkout
-            uses: actions/checkout@v4
+            uses: actions/checkout@v7
             with:
               # we need the history for the asset manifest
               fetch-depth: 0
@@ -29,7 +29,7 @@ jobs:
 
           - name: Docker meta
             id: meta
-            uses: docker/metadata-action@v5
+            uses: docker/metadata-action@v6
             with:
               # list of Docker images to use as base name for tags
               images: |
@@ -46,17 +46,17 @@ jobs:
                 type=sha 
 
           - name: Set up Docker Buildx
-            uses: docker/setup-buildx-action@v3
+            uses: docker/setup-buildx-action@v4
 
-          - name: 'Login to GitHub Container Registry'
-            uses: docker/login-action@v1
+          - name: Login to GitHub Container Registry
+            uses: docker/login-action@v4
             with:
               registry: ghcr.io
               username: ${{github.actor}}
               password: ${{secrets.GITHUB_TOKEN}}
 
           - name: Build and push
-            uses: docker/build-push-action@v6
+            uses: docker/build-push-action@v7
             with:
                 push: ${{ github.event_name != 'pull_request' }}
                 tags: ${{ steps.meta.outputs.tags }}
