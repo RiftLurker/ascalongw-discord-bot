@@ -1,7 +1,9 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { isFuture } from 'date-fns';
-import { EmbedBuilder, Message } from 'discord.js';
-import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import type { Message } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
+import type { CommandOrigin } from '../../helper/commands.ts';
+import { buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 import { getDiscordTimestamp } from '../../helper/timestamp.ts';
 import { getActivity, getActivityMeta } from '../../lib/activities.ts';
 
@@ -15,7 +17,7 @@ const INLINE_BLANKFIELD = {
     inline: true,
 };
 
-export class TemplateCommand extends Subcommand {
+export class WeeklyCommand extends Subcommand {
     public constructor(context: Subcommand.LoaderContext, options: Subcommand.Options) {
         super(context, {
             ...options,
@@ -85,7 +87,7 @@ export class TemplateCommand extends Subcommand {
                 value: getDiscordTimestamp(activityMeta.endDate, 'R')
             };
 
-        origin.reply({
+        await origin.reply({
             embeds: [
                 new EmbedBuilder()
                     .setColor('#0099ff')

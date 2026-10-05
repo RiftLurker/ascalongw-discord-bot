@@ -1,8 +1,11 @@
-import { Args, Command } from '@sapphire/framework';
+import type { Args } from '@sapphire/framework';
+import { Command } from '@sapphire/framework';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
-import { Message, codeBlock } from 'discord.js';
-import { CommandOrigin, buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import type { Message } from 'discord.js';
+import { codeBlock } from 'discord.js';
+import type { CommandOrigin } from '../../helper/commands.ts';
+import { buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 
 const TRADE_WEBSITE = 'https://kamadan.gwtoolbox.com';
 
@@ -17,7 +20,7 @@ interface SearchEntry {
     m: string;
 }
 
-export class MaterialsCommand extends Command {
+export class PricecheckCommand extends Command {
     public constructor(context: Command.LoaderContext, options: Command.Options) {
         super(context, {
             ...options,

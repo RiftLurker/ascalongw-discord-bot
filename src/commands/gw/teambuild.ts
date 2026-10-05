@@ -12,7 +12,7 @@ import { decodeTemplate, getProfessionName, getSkill } from '../../lib/skills.ts
 
 const assets = path.join(import.meta.dirname, '../../../assets');
 
-export class SkillbarCommand extends Command {
+export class TeambuildCommand extends Command {
     public constructor(context: Command.LoaderContext, options: Command.Options) {
         super(context, {
             ...options,

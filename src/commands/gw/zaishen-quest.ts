@@ -1,9 +1,12 @@
 import { Subcommand } from '@sapphire/plugin-subcommands';
 import { isFuture } from 'date-fns';
-import { EmbedBuilder, Message } from 'discord.js';
-import { CommandOrigin, buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
+import type { Message } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
+import type { CommandOrigin } from '../../helper/commands.ts';
+import { buildChatSubCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 import { getDiscordTimestamp } from '../../helper/timestamp.ts';
-import { ACTIVITIES, getActivity, getActivityMeta } from '../../lib/activities.ts';
+import type { ACTIVITIES } from '../../lib/activities.ts';
+import { getActivity, getActivityMeta } from '../../lib/activities.ts';
 
 /**
  * A blank field to create spacing between embed fields.

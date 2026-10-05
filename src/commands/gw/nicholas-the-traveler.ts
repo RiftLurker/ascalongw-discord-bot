@@ -8,7 +8,7 @@ import { getDiscordTimestamp } from '../../helper/timestamp.ts';
 import { getActivity, getActivityMeta } from '../../lib/activities.ts';
 import { wikiSearchUrl } from './wiki.ts';
 
-export class ZaishenQuestCommand extends Subcommand {
+export class NicholasTheTravelerCommand extends Subcommand {
     public constructor(context: Subcommand.LoaderContext, options: Subcommand.Options) {
         super(context, {
             ...options,
@@ -67,7 +67,7 @@ export class ZaishenQuestCommand extends Subcommand {
 
         const activityMeta = getActivityMeta('nicholas-the-traveler', date, activityOffset);
         const [verb, footer] = isFuture(activityMeta.startDate)
-            ? ['will collect', `Starting ${getDiscordTimestamp(activityMeta.startDate, 'R')}}!`]
+            ? ['will collect', `Starting ${getDiscordTimestamp(activityMeta.startDate, 'R')}!`]
             : ['is collecting', `Moving away ${getDiscordTimestamp(activityMeta.endDate, 'R')}!`];
 
         const { region, amount, item, area } = getActivity('nicholas-the-traveler', date, activityOffset);

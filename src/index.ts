@@ -5,7 +5,9 @@ import {
 import { ActivityType, Client, GatewayIntentBits, Partials } from 'discord.js';
 import http from 'node:http';
 
+import { register } from '@prometheus-io/client';
 import 'dotenv/config';
+import { setupMetrics } from './lib/metrics.ts';
 import { syncApplicationEmojis } from './sync-emojis.ts';
 
 if (process.env.ASCALONGW_DEVSERVER) {
@@ -60,6 +62,7 @@ client.once('clientReady', (c) => {
             },
         ],
     });
+    setupMetrics(c);
 });
 
 setInterval(function() {
@@ -73,12 +76,18 @@ setInterval(function() {
     }
 }, 60000);
 
-/*
- * Ping
- */
 http
-    .createServer((req, res) => {
-        res.write('ok');
-        res.end();
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    .createServer(async (req, res) => {
+        switch (req.url) {
+        case '/':
+            return res.end('ok');
+        case '/metrics':
+            if (process.env.METRICS_ENABLE !== 'true') {
+                return res.end('Metrics are disabled');
+            }
+            res.setHeader('Content-Type', register.contentType);
+            return res.end(await register.metrics());
+        }
     })
     .listen(process.env.PORT ?? 80);

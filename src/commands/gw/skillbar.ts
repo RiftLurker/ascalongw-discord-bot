@@ -22,6 +22,7 @@ import {
     getProfessionEmoji,
     getSkillEmoji
 } from '../../helper/emoji.ts';
+import { buttonUsage } from '../../lib/metrics.ts';
 import { buildPayload as buildSkillPayload } from './skill.ts';
 
 const IMAGE_SIZE = 64;
@@ -86,6 +87,10 @@ export class SkillbarCommand extends Command {
             if (!interaction.isStringSelectMenu()) {
                 return;
             }
+            buttonUsage.labels({
+                type: 'skillbar-skill-legacy',
+                guild: interaction.guildId ?? undefined,
+            }).inc();
             const match = /^skillbar-(.*)$/.exec(interaction.customId);
             if (!match) {
                 return;
@@ -152,6 +157,11 @@ export class SkillbarCommand extends Command {
                 return;
             }
 
+            buttonUsage.labels({
+                type: 'skillbar-skill',
+                guild: interaction.guildId ?? undefined,
+            }).inc();
+
             const payload = await buildPayload(skillbar, {
                 mode,
             });
@@ -188,6 +198,10 @@ export class SkillbarCommand extends Command {
             if (!interaction.isButton() || interaction.customId !== 'skillbar-clear') {
                 return;
             }
+            buttonUsage.labels({
+                type: 'skillbar-skill-clear',
+                guild: interaction.guildId ?? undefined,
+            }).inc();
             const message = interaction.message;
 
             await interaction.update({
