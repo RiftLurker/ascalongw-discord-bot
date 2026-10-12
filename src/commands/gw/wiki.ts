@@ -1,7 +1,7 @@
 import type { Args } from '@sapphire/framework';
 import { Command } from '@sapphire/framework';
-import axios from 'axios';
 import type { Message } from 'discord.js';
+import { hyperlink } from 'discord.js';
 import type { CommandOrigin } from '../../helper/commands.ts';
 import { buildChatCommand, isEphemeralCommand, prefixAliases } from '../../helper/commands.ts';
 
@@ -53,20 +53,19 @@ export class WikiCommand extends Command {
         let responseUrl = url;
 
         try {
-            const response = await axios.get(url);
-            responseUrl = response.request.res.responseUrl;
-            // Find canonical link
-            const canonical = /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)/.exec(response.data);
-            if(canonical) {
-                responseUrl = canonical[1];
-            }
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'AscalonGW',
+                },
+            });
+            responseUrl = response.url;
         }
         catch {
             // GWW can give error 403 if it suspects that we're a bot e.g. hosted on AWS etc
             // NBD, but give the URL back to discord and it'll try to fill it out
         }
 
-        await message.edit(responseUrl);
+        await message.edit(`Search result for ${hyperlink(search, responseUrl)}`);
     }
 }
 
